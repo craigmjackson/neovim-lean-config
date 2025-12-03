@@ -1,0 +1,25 @@
+local M = {}
+local misc = require('./misc')
+
+function M.install_package(installed, repo, directory)
+  if misc.in_table(installed, directory) then
+    return
+  end
+  local start_path = vim.fn.stdpath('data') .. '/runtime/pack/vendor/opt'
+  local command = { 'git', 'clone', 'https://github.com/' .. repo, start_path .. '/' .. directory }
+  local output = vim.fn.system(command)
+  if vim.v.shell_error == 128 then
+    -- print(repo .. ' already installed')
+    table.insert(installed, directory)
+    vim.cmd('packadd ' .. directory)
+  elseif vim.v.shell_error ~= 0 then
+    print('Exit code ' .. tostring(vim.v.shell_error) .. ' when running command: ' .. misc.dump(command))
+    print('Output: ' .. tostring(output))
+  else
+    print(repo  .. ' installed')
+    table.insert(installed, directory)
+    vim.cmd('packadd ' .. directory)
+  end
+end
+
+return M
