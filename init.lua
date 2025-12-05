@@ -1,11 +1,19 @@
 local packager = require('lua/packager')
+local misc = require('lua/misc')
 
 local installed = {}
+
+--- Theme
+vim.schedule(function()
+  packager.install_package(installed, 'folke/tokyonight.nvim', 'tokyonight')
+  local theme = require('tokyonight')
+  theme.setup()
+  vim.cmd [[colorscheme tokyonight]]
+end)
 
 --- Enable LSP completion
 vim.api.nvim_create_autocmd('LspAttach', {
   callback = function(event)
-    vim.lsp.completion.enable(true, event.data.client_id, event.buf, { autotrigger = false })
     -- Goto definition
     vim.keymap.set('n', 'gd', vim.lsp.buf.implementation, { buffer = event.buf })
     -- Enable virtual text
@@ -13,9 +21,13 @@ vim.api.nvim_create_autocmd('LspAttach', {
       virtual_text = {
         source = false
       },
-      severity_sort = true
+      severity_sort = true,
+      float = { border = 'rounded', source = 'if_many' },
+      underline = { severity = vim.diagnostic.severity.ERROR }
     })
-    vim.diagnostic.enable()
+    -- Enable autocompletion while typing
+    vim.o.completeopt = 'menu,menuone,noinsert,noselect'
+    vim.lsp.completion.enable(true, event.data.client_id, event.buf, { autotrigger = true })
   end
 })
 
@@ -35,13 +47,6 @@ vim.schedule(function()
   vim.keymap.set('n', '<c-g>', ':Pick grep_live<cr>', { noremap = true })
 end)
 
---- Theme
-vim.schedule(function()
-  packager.install_package(installed, 'folke/tokyonight.nvim', 'tokyonight')
-  local theme = require('tokyonight')
-  theme.setup()
-  vim.cmd [[colorscheme tokyonight]]
-end)
 
 --- Automatic indenting
 vim.schedule(function()
@@ -62,5 +67,38 @@ vim.schedule(function()
     filetypes = { 'lua' }
   })
   vim.lsp.enable('lua_ls')
+end)
+
+--- Python support
+vim.schedule(function()
+  if not misc.is_npm_package_installed('pyright') then
+    vim.fn.system('npm -g install pyright')
+  end
+  vim.lsp.config('pyright', {
+    cmd = { 'pyright-langserver', '--stdio' },
+    filetypes = { 'python' }
+  })
+  vim.lsp.enable('pyright')
+end)
+
+--- JavaScript support
+vim.schedule(function()
+  if not misc.is_npm_package_installed('@vue/language-server') then
+    vim.fn.system('@vue/language-server')
+  end
+  if not misc.is_npm_package_installed('typescript') then
+    vim.fn.system('typescript')
+  end
+  if not misc.is_npm_package_installed('@vue/typescript-plugin') then
+    vim.fn.system('@vue/typescript-plugin')
+  end
+  if not misc.is_npm_package_installed('typescript-language-server') then
+    vim.fn.system('typescript-language-server')
+  end
+  vim.lsp.config('ts_ls', {
+    cmd = { 'typescript-language-server', '--stdio' },
+    filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' }
+  })
+  vim.lsp.enable('ts_ls')
 end)
 
