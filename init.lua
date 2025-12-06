@@ -55,8 +55,17 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end
 })
 
+-- Status line
+vim.defer_fn(function()
+  packager.install_package(installed, 'nvim-mini/mini.nvim', 'mini.nvim')
+  local ministatusline = require('mini.statusline')
+  ministatusline.setup({
+    use_icons = true
+  })
+end, 100)
+
 --- Highlight TODOs
-vim.schedule(function()
+vim.defer_fn(function()
   vim.api.nvim_set_hl(0, 'TodoHighlight', { link = 'Todo' })
   vim.api.nvim_create_autocmd({ 'BufEnter', 'BufWinEnter' }, {
     callback = function()
@@ -65,25 +74,32 @@ vim.schedule(function()
     end
   })
   vim.api.nvim_exec_autocmds('BufEnter', { buffer = 0 })
-end)
+end, 200)
 
 --- Git signs
-vim.schedule(function()
+vim.defer_fn(function()
   packager.install_package(installed, 'lewis6991/gitsigns.nvim', 'gitsigns')
   local gitsigns = require('gitsigns')
   gitsigns.setup()
-end)
+end, 300)
 
 --- Theme
-vim.schedule(function()
+vim.defer_fn(function()
   packager.install_package(installed, 'folke/tokyonight.nvim', 'tokyonight')
   local theme = require('tokyonight')
   theme.setup()
   vim.cmd [[colorscheme tokyonight]]
-end)
+end, 400)
+
+--- Icons
+-- vim.schedule(function()
+--   packager.install_package(installed, 'nvim-tree/nvim-web-devicons', 'nvim-web-devicons')
+--   local nvim_web_devicons = require('nvim-web-devicons')
+--   nvim_web_devicons.setup()
+-- end)
 
 --- Formatting
-vim.schedule(function()
+vim.defer_fn(function()
   packager.install_package(installed, 'stevearc/conform.nvim', 'conform')
   local conform = require('conform')
   conform.setup({
@@ -93,41 +109,43 @@ vim.schedule(function()
       javascript = { 'prettier' }
     },
     format_on_save = {
-      timeout_ms = 500,
+      timeout_ms = 250,
       lsp_format = 'fallback'
     }
   })
-end)
+end, 500)
 
 --- LSP configuration
-vim.api.nvim_create_autocmd('LspAttach', {
-  callback = function(event)
-    -- Goto definition
-    vim.keymap.set('n', 'gd', vim.lsp.buf.implementation, { buffer = event.buf })
-    -- Enable virtual text
-    vim.diagnostic.config({
-      virtual_text = {
-        source = false
-      },
-      severity_sort = true,
-      float = { border = 'rounded', source = 'if_many' },
-      underline = { severity = vim.diagnostic.severity.ERROR }
-    })
-    -- Enable autocompletion while typing
-    vim.o.completeopt = 'menu,menuone,noinsert,noselect'
-    vim.lsp.completion.enable(true, event.data.client_id, event.buf, { autotrigger = true })
-  end
-})
+vim.defer_fn(function()
+  vim.api.nvim_create_autocmd('LspAttach', {
+    callback = function(event)
+      -- Goto definition
+      vim.keymap.set('n', 'gd', vim.lsp.buf.implementation, { buffer = event.buf })
+      -- Enable virtual text
+      vim.diagnostic.config({
+        virtual_text = {
+          source = false
+        },
+        severity_sort = true,
+        float = { border = 'rounded', source = 'if_many' },
+        underline = { severity = vim.diagnostic.severity.ERROR }
+      })
+      -- Enable autocompletion while typing
+      vim.o.completeopt = 'menu,menuone,noinsert,noselect'
+      vim.lsp.completion.enable(true, event.data.client_id, event.buf, { autotrigger = true })
+    end
+  })
+end, 600)
 
 --- Auto pairs
-vim.schedule(function()
+vim.defer_fn(function()
   packager.install_package(installed, 'nvim-mini/mini.nvim', 'mini.nvim')
   local minipairs = require('mini.pairs')
   minipairs.setup()
-end)
+end, 700)
 
 -- Picker
-vim.schedule(function()
+vim.defer_fn(function()
   packager.install_package(installed, 'nvim-mini/mini.nvim', 'mini.nvim')
   local minipick = require('mini.pick')
   minipick.setup()
@@ -135,18 +153,18 @@ vim.schedule(function()
   vim.keymap.set('n', '<leader>sf', ':Pick files<cr>', { noremap = true })
   vim.keymap.set('n', '<leader>sg', ':Pick grep_live<cr>', { noremap = true })
   vim.keymap.set('n', '<leader>sn', ':Pick files \'' .. vim.fn.stdpath('config') .. '\' <cr>', { noremap = true })
-end)
+end, 800)
 
 --- Automatic indenting
-vim.schedule(function()
+vim.defer_fn(function()
   packager.install_package(installed, 'NMAC427/guess-indent.nvim', 'guess-indent.nvim')
   local guess_indent = require('guess-indent')
   guess_indent.setup({})
   vim.api.nvim_exec_autocmds('BufReadPost', { buffer = 0 })
-end)
+end, 900)
 
 --- Lua support
-vim.schedule(function()
+vim.defer_fn(function()
   packager.install_package(installed, 'folke/lazydev.nvim', 'lazydev.nvim')
   local lazydev = require('lazydev')
   lazydev.setup()
@@ -156,10 +174,10 @@ vim.schedule(function()
     filetypes = { 'lua' }
   })
   vim.lsp.enable('lua_ls')
-end)
+end, 1000)
 
 --- Python support
-vim.schedule(function()
+vim.defer_fn(function()
   if not misc.is_npm_package_installed('pyright') then
     vim.fn.system('npm -g install pyright')
   end
@@ -168,10 +186,10 @@ vim.schedule(function()
     filetypes = { 'python' }
   })
   vim.lsp.enable('pyright')
-end)
+end, 1100)
 
 --- JavaScript support
-vim.schedule(function()
+vim.defer_fn(function()
   if not misc.is_npm_package_installed('@vue/language-server') then
     vim.fn.system('@vue/language-server')
   end
@@ -189,4 +207,4 @@ vim.schedule(function()
     filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' }
   })
   vim.lsp.enable('ts_ls')
-end)
+end, 1200)
