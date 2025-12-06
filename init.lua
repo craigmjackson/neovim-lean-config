@@ -52,6 +52,13 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end
 })
 
+--- Git signs
+vim.schedule(function()
+  packager.install_package(installed, 'lewis6991/gitsigns.nvim', 'gitsigns')
+  local gitsigns = require('gitsigns')
+  gitsigns.setup()
+end)
+
 --- Theme
 vim.schedule(function()
   packager.install_package(installed, 'folke/tokyonight.nvim', 'tokyonight')
@@ -112,7 +119,6 @@ vim.schedule(function()
   vim.keymap.set('n', '<c-n>', ':Pick files<cr>', { noremap = true })
   vim.keymap.set('n', '<c-g>', ':Pick grep_live<cr>', { noremap = true })
 end)
-
 
 --- Automatic indenting
 vim.schedule(function()
