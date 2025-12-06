@@ -98,11 +98,31 @@ vim.defer_fn(function()
   nvim_web_devicons.setup()
 end, 450)
 
+--- Breadcrumbs
 vim.defer_fn(function()
   packager.install_package(installed, 'Bekaboo/dropbar.nvim', 'dropbar')
   local dropbar = require('dropbar')
   dropbar.setup()
 end, 475)
+
+--- Tabs
+vim.defer_fn(function()
+  packager.install_package(installed, 'akinsho/bufferline.nvim', 'bufferline')
+  local bufferline = require('bufferline')
+  bufferline.setup({
+    options = {
+      nubmers = 'ordinal',
+      separator_style = 'slant'
+    }
+  })
+  -- Go to buffer number with <Space> b <buffer_number><Enter>
+  vim.keymap.set('n', '<leader>b', ':BufferLineGoToBuffer ', { desc = 'Open [B]uffer (tab) number' })
+  -- Go to next buffer with <Space> <Tab>
+  vim.keymap.set('n', '<leader><Tab>', ':BufferLineCycleNext<CR>', { desc = 'Cycle next tab' })
+  -- Go to previous buffer with <Space> <Shift-Tab>
+  vim.keymap.set('n', '<leader><Shift-Tab>', ':BufferLineCyclePrev<CR>', { desc = 'Cycle previous tab' })
+  -- Close current buffer with :bd
+end, 480)
 
 --- Formatting
 vim.defer_fn(function()
