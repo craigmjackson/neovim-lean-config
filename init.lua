@@ -11,7 +11,24 @@ vim.schedule(function()
   vim.cmd [[colorscheme tokyonight]]
 end)
 
---- Enable LSP completion
+--- Formatting
+vim.schedule(function()
+  packager.install_package(installed, 'stevearc/conform.nvim', 'conform')
+  local conform = require('conform')
+  conform.setup({
+    formatters_by_ft = {
+      lua = { 'stylua' },
+      python = { 'isort', 'black' },
+      javascript = { 'prettier' }
+    },
+    format_on_save = {
+      timeout_ms = 500,
+      lsp_format = 'fallback'
+    }
+  })
+end)
+
+--- LSP configuration
 vim.api.nvim_create_autocmd('LspAttach', {
   callback = function(event)
     -- Goto definition
@@ -101,4 +118,3 @@ vim.schedule(function()
   })
   vim.lsp.enable('ts_ls')
 end)
-
