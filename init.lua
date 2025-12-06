@@ -92,11 +92,17 @@ vim.defer_fn(function()
 end, 400)
 
 --- Icons
--- vim.schedule(function()
---   packager.install_package(installed, 'nvim-tree/nvim-web-devicons', 'nvim-web-devicons')
---   local nvim_web_devicons = require('nvim-web-devicons')
---   nvim_web_devicons.setup()
--- end)
+vim.defer_fn(function()
+  packager.install_package(installed, 'nvim-tree/nvim-web-devicons', 'nvim-web-devicons')
+  local nvim_web_devicons = require('nvim-web-devicons')
+  nvim_web_devicons.setup()
+end, 450)
+
+vim.defer_fn(function()
+  packager.install_package(installed, 'Bekaboo/dropbar.nvim', 'dropbar')
+  local dropbar = require('dropbar')
+  dropbar.setup()
+end, 475)
 
 --- Formatting
 vim.defer_fn(function()
