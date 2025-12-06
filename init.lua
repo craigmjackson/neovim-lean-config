@@ -4,6 +4,9 @@ local misc = require('lua/misc')
 local installed = {}
 
 --- Options
+-- Set leader key
+vim.g.mapleader = ' '
+vim.g.maplocalleader = ' '
 -- Enable line numbers
 vim.opt.number = true
 -- Enable relative line numbers
@@ -51,6 +54,18 @@ vim.api.nvim_create_autocmd('TextYankPost', {
     vim.highlight.on_yank()
   end
 })
+
+--- Highlight TODOs
+vim.schedule(function()
+  vim.api.nvim_set_hl(0, 'TodoHighlight', { link = 'Todo' })
+  vim.api.nvim_create_autocmd({ 'BufEnter', 'BufWinEnter' }, {
+    callback = function()
+      vim.fn.matchadd('TodoHighlight', [[\<TODO\>]])
+      vim.api.nvim_set_hl(0, 'TodoHighlight', { link = 'Todo' })
+    end
+  })
+  vim.api.nvim_exec_autocmds('BufEnter', { buffer = 0 })
+end)
 
 --- Git signs
 vim.schedule(function()
@@ -117,7 +132,9 @@ vim.schedule(function()
   local minipick = require('mini.pick')
   minipick.setup()
   vim.keymap.set('n', '<c-n>', ':Pick files<cr>', { noremap = true })
-  vim.keymap.set('n', '<c-g>', ':Pick grep_live<cr>', { noremap = true })
+  vim.keymap.set('n', '<leader>sf', ':Pick files<cr>', { noremap = true })
+  vim.keymap.set('n', '<leader>sg', ':Pick grep_live<cr>', { noremap = true })
+  vim.keymap.set('n', '<leader>sn', ':Pick files \'' .. vim.fn.stdpath('config') .. '\' <cr>', { noremap = true })
 end)
 
 --- Automatic indenting
