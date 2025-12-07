@@ -55,17 +55,78 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end
 })
 
+--- Theme
+vim.defer_fn(function()
+  -- local start_time = misc.get_time()
+  packager.install_package(installed, 'folke/tokyonight.nvim', 'tokyonight')
+  local theme = require('tokyonight')
+  theme.setup()
+  vim.cmd [[colorscheme tokyonight]]
+  -- local end_time = misc.get_time()
+  -- print('Theme Delta: ', misc.get_time_delta(start_time, end_time))
+end, 0)
+
+--- Icons
+
+vim.defer_fn(function()
+  -- local start_time = misc.get_time()
+  packager.install_package(installed, 'nvim-tree/nvim-web-devicons', 'nvim-web-devicons')
+  local nvim_web_devicons = require('nvim-web-devicons')
+  nvim_web_devicons.setup()
+  -- local end_time = misc.get_time()
+  -- print('Icons Delta: ', misc.get_time_delta(start_time, end_time))
+end, 30)
+
+--- File manager
+vim.defer_fn(function()
+  -- local start_time = misc.get_time()
+  packager.install_package(installed, 'nvim-tree/nvim-tree.lua', 'nvim-tree')
+  local nvim_tree = require('nvim-tree')
+  nvim_tree.setup({
+    disable_netrw = true,
+    hijack_netrw = true,
+    filters = {
+      git_ignored = false
+    },
+    actions = {
+      open_file = {
+        quit_on_open = true
+      }
+    }
+  })
+  vim.keymap.set('n', '<c-n>', ':NvimTreeToggle<cr>', { noremap = true })
+  vim.keymap.set('n', '<leader>sn', ':NvimTreeToggle \'' .. vim.fn.stdpath('config') .. '\' <cr>', { noremap = true })
+  -- local end_time = misc.get_time()
+  -- print('File manager Delta: ', misc.get_time_delta(start_time, end_time))
+end, 50)
+
+-- Picker
+vim.defer_fn(function()
+  -- local start_time = misc.get_time()
+  packager.install_package(installed, 'nvim-mini/mini.nvim', 'mini.nvim')
+  local minipick = require('mini.pick')
+  minipick.setup()
+  vim.keymap.set('n', '<leader>sf', ':Pick files<cr>', { noremap = true })
+  vim.keymap.set('n', '<leader>sg', ':Pick grep_live<cr>', { noremap = true })
+  -- local end_time = misc.get_time()
+  -- print('Picker Delta: ', misc.get_time_delta(start_time, end_time))
+end, 80)
+
 -- Status line
 vim.defer_fn(function()
+  -- local start_time = misc.get_time()
   packager.install_package(installed, 'nvim-mini/mini.nvim', 'mini.nvim')
   local ministatusline = require('mini.statusline')
   ministatusline.setup({
     use_icons = true
   })
-end, 100)
+  -- local end_time = misc.get_time()
+  -- print('Status line Delta: ', misc.get_time_delta(start_time, end_time))
+end, 95)
 
 --- Highlight TODOs
 vim.defer_fn(function()
+  -- local start_time = misc.get_time()
   vim.api.nvim_set_hl(0, 'TodoHighlight', { link = 'Todo' })
   vim.api.nvim_create_autocmd({ 'BufEnter', 'BufWinEnter' }, {
     callback = function()
@@ -74,39 +135,33 @@ vim.defer_fn(function()
     end
   })
   vim.api.nvim_exec_autocmds('BufEnter', { buffer = 0 })
-end, 200)
+  -- local end_time = misc.get_time()
+  -- print('Highlight Todos Delta: ', misc.get_time_delta(start_time, end_time))
+end, 105)
 
 --- Git signs
 vim.defer_fn(function()
+  -- local start_time = misc.get_time()
   packager.install_package(installed, 'lewis6991/gitsigns.nvim', 'gitsigns')
   local gitsigns = require('gitsigns')
   gitsigns.setup()
-end, 300)
-
---- Theme
-vim.defer_fn(function()
-  packager.install_package(installed, 'folke/tokyonight.nvim', 'tokyonight')
-  local theme = require('tokyonight')
-  theme.setup()
-  vim.cmd [[colorscheme tokyonight]]
-end, 400)
-
---- Icons
-vim.defer_fn(function()
-  packager.install_package(installed, 'nvim-tree/nvim-web-devicons', 'nvim-web-devicons')
-  local nvim_web_devicons = require('nvim-web-devicons')
-  nvim_web_devicons.setup()
-end, 450)
+  -- local end_time = misc.get_time()
+  -- print('Git signs Delta: ', misc.get_time_delta(start_time, end_time))
+end, 115)
 
 --- Breadcrumbs
 vim.defer_fn(function()
+  -- local start_time = misc.get_time()
   packager.install_package(installed, 'Bekaboo/dropbar.nvim', 'dropbar')
   local dropbar = require('dropbar')
   dropbar.setup()
-end, 475)
+  -- local end_time = misc.get_time()
+  -- print('Breadcrubms Delta: ', misc.get_time_delta(start_time, end_time))
+end, 145)
 
 --- Tabs
 vim.defer_fn(function()
+  -- local start_time = misc.get_time()
   packager.install_package(installed, 'akinsho/bufferline.nvim', 'bufferline')
   local bufferline = require('bufferline')
   bufferline.setup({
@@ -122,10 +177,13 @@ vim.defer_fn(function()
   -- Go to previous buffer with <Space> <Shift-Tab>
   vim.keymap.set('n', '<leader><Shift-Tab>', ':BufferLineCyclePrev<CR>', { desc = 'Cycle previous tab', noremap = true })
   -- Close current buffer with :bd
-end, 480)
+  -- local end_time = misc.get_time()
+  -- print('Tabs Delta: ', misc.get_time_delta(start_time, end_time))
+end, 160)
 
 --- Formatting
 vim.defer_fn(function()
+  -- local start_time = misc.get_time()
   packager.install_package(installed, 'stevearc/conform.nvim', 'conform')
   local conform = require('conform')
   conform.setup({
@@ -139,10 +197,13 @@ vim.defer_fn(function()
       lsp_format = 'fallback'
     }
   })
-end, 500)
+  -- local end_time = misc.get_time()
+  -- print('Formatting Delta: ', misc.get_time_delta(start_time, end_time))
+end, 185)
 
 --- LSP configuration
 vim.defer_fn(function()
+  -- local start_time = misc.get_time()
   vim.api.nvim_create_autocmd('LspAttach', {
     callback = function(event)
       -- Goto definition
@@ -161,46 +222,23 @@ vim.defer_fn(function()
       vim.lsp.completion.enable(true, event.data.client_id, event.buf, { autotrigger = true })
     end
   })
-end, 600)
+  -- local end_time = misc.get_time()
+  -- print('LSP config Delta: ', misc.get_time_delta(start_time, end_time))
+end, 195)
 
 --- Auto pairs
 vim.defer_fn(function()
+  -- local start_time = misc.get_time()
   packager.install_package(installed, 'nvim-mini/mini.nvim', 'mini.nvim')
   local minipairs = require('mini.pairs')
   minipairs.setup()
-end, 700)
-
--- Picker
-vim.defer_fn(function()
-  packager.install_package(installed, 'nvim-mini/mini.nvim', 'mini.nvim')
-  local minipick = require('mini.pick')
-  minipick.setup()
-  vim.keymap.set('n', '<leader>sf', ':Pick files<cr>', { noremap = true })
-  vim.keymap.set('n', '<leader>sg', ':Pick grep_live<cr>', { noremap = true })
-end, 800)
-
---- File manager
-vim.defer_fn(function()
-  packager.install_package(installed, 'nvim-tree/nvim-tree.lua', 'nvim-tree')
-  local nvim_tree = require('nvim-tree')
-  nvim_tree.setup({
-    disable_netrw = true,
-    hijack_netrw = true,
-    filters = {
-      git_ignored = false
-    },
-    actions = {
-      open_file = {
-        quit_on_open = true
-      }
-    }
-  })
-  vim.keymap.set('n', '<c-n>', ':NvimTreeToggle<cr>', { noremap = true })
-  vim.keymap.set('n', '<leader>sn', ':NvimTreeToggle \'' .. vim.fn.stdpath('config') .. '\' <cr>', { noremap = true })
-end, 850)
+  -- local end_time = misc.get_time()
+  -- print('Autopairs Delta: ', misc.get_time_delta(start_time, end_time))
+end, 205)
 
 --- Scrollbar
 vim.defer_fn(function()
+  -- local start_time = misc.get_time()
   packager.install_package(installed, 'petertriho/nvim-scrollbar', 'nvim-scrollbar')
   local scrollbar = require('scrollbar')
   scrollbar.setup({
@@ -208,18 +246,24 @@ vim.defer_fn(function()
       gitsigns = true
     }
   })
-end, 875)
+  -- local end_time = misc.get_time()
+  -- print('Scrollbar Delta: ', misc.get_time_delta(start_time, end_time))
+end, 215)
 
 --- Automatic indenting
 vim.defer_fn(function()
+  -- local start_time = misc.get_time()
   packager.install_package(installed, 'NMAC427/guess-indent.nvim', 'guess-indent.nvim')
   local guess_indent = require('guess-indent')
   guess_indent.setup({})
   vim.api.nvim_exec_autocmds('BufReadPost', { buffer = 0 })
-end, 900)
+  -- local end_time = misc.get_time()
+  -- print('Automatic indenting Delta: ', misc.get_time_delta(start_time, end_time))
+end, 235)
 
 --- Zen mode
 vim.defer_fn(function()
+  -- local start_time = misc.get_time()
   packager.install_package(installed, 'folke/zen-mode.nvim', 'zen-mode')
   local zen_mode = require('zen-mode')
   zen_mode.setup({
@@ -228,15 +272,21 @@ vim.defer_fn(function()
     }
   })
   vim.keymap.set('n', '<leader>z', ':ZenMode<cr>', { noremap = true })
-end, 950)
+  -- local end_time = misc.get_time()
+  -- print('Zen mode Delta: ', misc.get_time_delta(start_time, end_time))
+end, 265)
 
 --- Relative number on in normal mode, off in insert mode
 vim.defer_fn(function()
+  -- local start_time = misc.get_time()
   packager.install_package(installed, 'sitiom/nvim-numbertoggle', 'nvim-numbertoggle')
-end, 975)
+  -- local end_time = misc.get_time()
+  -- print('Relative number Delta: ', misc.get_time_delta(start_time, end_time))
+end, 280)
 
 --- Lua support
 vim.defer_fn(function()
+  -- local start_time = misc.get_time()
   packager.install_package(installed, 'folke/lazydev.nvim', 'lazydev.nvim')
   local lazydev = require('lazydev')
   lazydev.setup()
@@ -246,10 +296,13 @@ vim.defer_fn(function()
     filetypes = { 'lua' }
   })
   vim.lsp.enable('lua_ls')
-end, 1000)
+  -- local end_time = misc.get_time()
+  -- print('lua support Delta: ', misc.get_time_delta(start_time, end_time))
+end, 290)
 
 --- Python support
 vim.defer_fn(function()
+  -- local start_time = misc.get_time()
   if not misc.is_npm_package_installed('pyright') then
     vim.fn.system('npm -g install pyright')
   end
@@ -258,11 +311,14 @@ vim.defer_fn(function()
     filetypes = { 'python' }
   })
   vim.lsp.enable('pyright')
-end, 1100)
+  -- local end_time = misc.get_time()
+  -- print('python support Delta: ', misc.get_time_delta(start_time, end_time))
+end, 310)
 
 --- Bash support
 ---- Install 'shellcheck' for linting and 'shfmt' for formatting
 vim.defer_fn(function()
+  -- local start_time = misc.get_time()
   if not misc.is_npm_package_installed('bash-language-server') then
     vim.fn.system('npm -g install bash-language-server')
   end
@@ -277,10 +333,13 @@ vim.defer_fn(function()
     root_markers = { '.git' }
   })
   vim.lsp.enable('bashls')
-end, 1150)
+  -- local end_time = misc.get_time()
+  -- print('bash support Delta: ', misc.get_time_delta(start_time, end_time))
+end, 2000)
 
 --- JavaScript support
 vim.defer_fn(function()
+  -- local start_time = misc.get_time()
   if not misc.is_npm_package_installed('@vue/language-server') then
     vim.fn.system('@vue/language-server')
   end
@@ -298,10 +357,13 @@ vim.defer_fn(function()
     filetypes = { 'typescript', 'javascript', 'javascriptreact', 'typescriptreact', 'vue' }
   })
   vim.lsp.enable('ts_ls')
-end, 1200)
+  -- local end_time = misc.get_time()
+  -- print('javascript support Delta: ', misc.get_time_delta(start_time, end_time))
+end, 3000)
 
 --- Markdown support
 vim.defer_fn(function()
+  -- local start_time = misc.get_time()
   packager.install_package(installed, 'MeanderingProgrammer/render-markdown.nvim', 'render-markdown')
   local render_markdown = require('render-markdown')
   render_markdown.setup({
@@ -319,4 +381,6 @@ vim.defer_fn(function()
       end
     end
   })
-end, 1300)
+  -- local end_time = misc.get_time()
+  -- print('markdown support Delta: ', misc.get_time_delta(start_time, end_time))
+end, 6000)
