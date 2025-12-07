@@ -17,7 +17,7 @@ function M.install_package(installed, repo, directory)
     print('Exit code ' .. tostring(vim.v.shell_error) .. ' when running command: ' .. misc.dump(command))
     print('Output: ' .. tostring(output))
   else
-    print(repo  .. ' installed')
+    print(repo .. ' installed')
     table.insert(installed, directory)
     vim.cmd('packadd ' .. directory)
     vim.cmd('packloadall')

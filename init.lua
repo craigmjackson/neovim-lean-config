@@ -116,11 +116,11 @@ vim.defer_fn(function()
     }
   })
   -- Go to buffer number with <Space> b <buffer_number><Enter>
-  vim.keymap.set('n', '<leader>b', ':BufferLineGoToBuffer ', { desc = 'Open [B]uffer (tab) number' })
+  vim.keymap.set('n', '<leader>b', ':BufferLineGoToBuffer ', { desc = 'Open [B]uffer (tab) number', noremap = true })
   -- Go to next buffer with <Space> <Tab>
-  vim.keymap.set('n', '<leader><Tab>', ':BufferLineCycleNext<CR>', { desc = 'Cycle next tab' })
+  vim.keymap.set('n', '<leader><Tab>', ':BufferLineCycleNext<CR>', { desc = 'Cycle next tab', noremap = true })
   -- Go to previous buffer with <Space> <Shift-Tab>
-  vim.keymap.set('n', '<leader><Shift-Tab>', ':BufferLineCyclePrev<CR>', { desc = 'Cycle previous tab' })
+  vim.keymap.set('n', '<leader><Shift-Tab>', ':BufferLineCyclePrev<CR>', { desc = 'Cycle previous tab', noremap = true })
   -- Close current buffer with :bd
 end, 480)
 
@@ -135,7 +135,7 @@ vim.defer_fn(function()
       javascript = { 'prettier' }
     },
     format_on_save = {
-      timeout_ms = 250,
+      timeout_ms = 1000,
       lsp_format = 'fallback'
     }
   })
@@ -175,11 +175,29 @@ vim.defer_fn(function()
   packager.install_package(installed, 'nvim-mini/mini.nvim', 'mini.nvim')
   local minipick = require('mini.pick')
   minipick.setup()
-  vim.keymap.set('n', '<c-n>', ':Pick files<cr>', { noremap = true })
   vim.keymap.set('n', '<leader>sf', ':Pick files<cr>', { noremap = true })
   vim.keymap.set('n', '<leader>sg', ':Pick grep_live<cr>', { noremap = true })
-  vim.keymap.set('n', '<leader>sn', ':Pick files \'' .. vim.fn.stdpath('config') .. '\' <cr>', { noremap = true })
 end, 800)
+
+--- File manager
+vim.defer_fn(function()
+  packager.install_package(installed, 'nvim-tree/nvim-tree.lua', 'nvim-tree')
+  local nvim_tree = require('nvim-tree')
+  nvim_tree.setup({
+    disable_netrw = true,
+    hijack_netrw = true,
+    filters = {
+      git_ignored = false
+    },
+    actions = {
+      open_file = {
+        quit_on_open = true
+      }
+    }
+  })
+  vim.keymap.set('n', '<c-n>', ':NvimTreeToggle<cr>', { noremap = true })
+  vim.keymap.set('n', '<leader>sn', ':NvimTreeToggle \'' .. vim.fn.stdpath('config') .. '\' <cr>', { noremap = true })
+end, 850)
 
 --- Automatic indenting
 vim.defer_fn(function()
