@@ -218,6 +218,18 @@ vim.defer_fn(function()
   vim.api.nvim_exec_autocmds('BufReadPost', { buffer = 0 })
 end, 900)
 
+--- Zen mode
+vim.defer_fn(function()
+  packager.install_package(installed, 'folke/zen-mode.nvim', 'zen-mode')
+  local zen_mode = require('zen-mode')
+  zen_mode.setup({
+    window = {
+      width = .95
+    }
+  })
+  vim.keymap.set('n', '<leader>z', ':ZenMode<cr>', { noremap = true })
+end, 950)
+
 --- Lua support
 vim.defer_fn(function()
   packager.install_package(installed, 'folke/lazydev.nvim', 'lazydev.nvim')
