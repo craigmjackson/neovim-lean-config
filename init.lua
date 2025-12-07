@@ -230,6 +230,11 @@ vim.defer_fn(function()
   vim.keymap.set('n', '<leader>z', ':ZenMode<cr>', { noremap = true })
 end, 950)
 
+--- Relative number on in normal mode, off in insert mode
+vim.defer_fn(function()
+  packager.install_package(installed, 'sitiom/nvim-numbertoggle', 'nvim-numbertoggle')
+end, 975)
+
 --- Lua support
 vim.defer_fn(function()
   packager.install_package(installed, 'folke/lazydev.nvim', 'lazydev.nvim')
