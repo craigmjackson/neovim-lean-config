@@ -12,10 +12,8 @@ end
 
 -- Get if NPM package is installed
 function M.is_npm_package_installed(package_name)
-   vim.fn.system('npm list -g ' .. package_name)
-   return vim.api.nvim_get_vvar('shell_error') == 0
+  vim.fn.system('npm list -g ' .. package_name)
+  return vim.api.nvim_get_vvar('shell_error') == 0
 end
 
 return M
-
-

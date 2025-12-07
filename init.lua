@@ -199,6 +199,17 @@ vim.defer_fn(function()
   vim.keymap.set('n', '<leader>sn', ':NvimTreeToggle \'' .. vim.fn.stdpath('config') .. '\' <cr>', { noremap = true })
 end, 850)
 
+--- Scrollbar
+vim.defer_fn(function()
+  packager.install_package(installed, 'petertriho/nvim-scrollbar', 'nvim-scrollbar')
+  local scrollbar = require('scrollbar')
+  scrollbar.setup({
+    handlers = {
+      gitsigns = true
+    }
+  })
+end, 875)
+
 --- Automatic indenting
 vim.defer_fn(function()
   packager.install_package(installed, 'NMAC427/guess-indent.nvim', 'guess-indent.nvim')
@@ -252,3 +263,24 @@ vim.defer_fn(function()
   })
   vim.lsp.enable('ts_ls')
 end, 1200)
+
+--- Markdown support
+vim.defer_fn(function()
+  packager.install_package(installed, 'MeanderingProgrammer/render-markdown.nvim', 'render-markdown')
+  local render_markdown = require('render-markdown')
+  render_markdown.setup({
+    completions = {
+      lsp = {
+        enabled = true
+      }
+    }
+  })
+  vim.api.nvim_create_autocmd('FileType', {
+    pattern = 'markdown',
+    callback = function(opts)
+      if vim.bo[opts.buf].filetype == 'markdown' then
+        vim.cmd 'RenderMarkdown enable'
+      end
+    end
+  })
+end, 1300)
