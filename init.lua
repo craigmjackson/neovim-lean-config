@@ -260,6 +260,25 @@ vim.defer_fn(function()
   vim.lsp.enable('pyright')
 end, 1100)
 
+--- Bash support
+---- Install 'shellcheck' for linting and 'shfmt' for formatting
+vim.defer_fn(function()
+  if not misc.is_npm_package_installed('bash-language-server') then
+    vim.fn.system('npm -g install bash-language-server')
+  end
+  vim.lsp.config('bashls', {
+    cmd = { 'bash-language-server', 'start' },
+    settings = {
+      bashIde = {
+        globPattern = vim.env.GLOB_PATTERN or '*@(.sh|.inc|.bash|.command)'
+      }
+    },
+    filetypes = { 'bash', 'sh' },
+    root_markers = { '.git' }
+  })
+  vim.lsp.enable('bashls')
+end, 1150)
+
 --- JavaScript support
 vim.defer_fn(function()
   if not misc.is_npm_package_installed('@vue/language-server') then
