@@ -3,6 +3,12 @@ local misc = require('lua/misc')
 
 local installed = {}
 
+--- Nerd fonts are special programming fonts that provide icons.
+--- Set to false if you don't have a nerd font or can't guarantee
+--- the user has one.  Get one from https://www.nerdfonts.com/font-downloads
+--- and set your terminal emulator to use it.
+local nerd_font = true
+
 --- Options
 -- Set leader key
 vim.g.mapleader = ' '
@@ -67,14 +73,15 @@ vim.defer_fn(function()
 end, 0)
 
 --- Icons
-
 vim.defer_fn(function()
-  -- local start_time = misc.get_time()
-  packager.install_package(installed, 'nvim-tree/nvim-web-devicons', 'nvim-web-devicons')
-  local nvim_web_devicons = require('nvim-web-devicons')
-  nvim_web_devicons.setup()
-  -- local end_time = misc.get_time()
-  -- print('Icons Delta: ', misc.get_time_delta(start_time, end_time))
+  if nerd_font then
+    -- local start_time = misc.get_time()
+    packager.install_package(installed, 'nvim-tree/nvim-web-devicons', 'nvim-web-devicons')
+    local nvim_web_devicons = require('nvim-web-devicons')
+    nvim_web_devicons.setup()
+    -- local end_time = misc.get_time()
+    -- print('Icons Delta: ', misc.get_time_delta(start_time, end_time))
+  end
 end, 30)
 
 --- File manager
@@ -92,6 +99,45 @@ vim.defer_fn(function()
       open_file = {
         quit_on_open = true
       }
+    },
+    renderer = {
+      icons = {
+        web_devicons = {
+          file = {
+            enable = nerd_font,
+            color = true
+          },
+          folder = {
+            enable = nerd_font,
+            color = true
+          }
+        },
+        glyphs = nerd_font and {} or {
+          default = '',
+          symlink = '',
+          bookmark = '',
+          modified = 'm',
+          hidden = '',
+          folder = {
+            arrow_closed = '>',
+            arrow_open = 'v',
+            default = 'd',
+            open = 'd',
+            empty = 'd',
+            empty_open = 'd',
+            symlink = 'ds',
+            symlink_open = 'ds',
+          },
+          git = {
+            unstaged = '',
+            staged = 's',
+            unmerged = '',
+            untracked = '',
+            deleted = 'd',
+            ignored = '',
+          }
+        }
+      }
     }
   })
   vim.keymap.set('n', '<c-n>', ':NvimTreeToggle<cr>', { noremap = true })
@@ -105,7 +151,16 @@ vim.defer_fn(function()
   -- local start_time = misc.get_time()
   packager.install_package(installed, 'nvim-mini/mini.nvim', 'mini.nvim')
   local minipick = require('mini.pick')
-  minipick.setup()
+  minipick.setup({
+    source = {
+      show = minipick.default_show
+    },
+    window = {
+      prompt_caret = '|',
+      prompt_prefix = '> '
+    },
+    show_icons = nerd_font
+  })
   vim.keymap.set('n', '<leader>sf', ':Pick files<cr>', { noremap = true })
   vim.keymap.set('n', '<leader>sg', ':Pick grep_live<cr>', { noremap = true })
   -- local end_time = misc.get_time()
@@ -118,7 +173,7 @@ vim.defer_fn(function()
   packager.install_package(installed, 'nvim-mini/mini.nvim', 'mini.nvim')
   local ministatusline = require('mini.statusline')
   ministatusline.setup({
-    use_icons = true
+    use_icons = nerd_font
   })
   -- local end_time = misc.get_time()
   -- print('Status line Delta: ', misc.get_time_delta(start_time, end_time))
@@ -144,7 +199,24 @@ vim.defer_fn(function()
   -- local start_time = misc.get_time()
   packager.install_package(installed, 'lewis6991/gitsigns.nvim', 'gitsigns')
   local gitsigns = require('gitsigns')
-  gitsigns.setup()
+  gitsigns.setup({
+    signs = {
+      add          = { text = '|' },
+      change       = { text = '|' },
+      delete       = { text = '_' },
+      topdelete    = { text = '_' },
+      changedelete = { text = '~' },
+      untracked    = { text = ' ' },
+    },
+    signs_staged = {
+      add          = { text = '|' },
+      change       = { text = '|' },
+      delete       = { text = '_' },
+      topdelete    = { text = '_' },
+      changedelete = { text = '~' },
+      untracked    = { text = ' ' },
+    }
+  })
   -- local end_time = misc.get_time()
   -- print('Git signs Delta: ', misc.get_time_delta(start_time, end_time))
 end, 115)
@@ -154,7 +226,95 @@ vim.defer_fn(function()
   -- local start_time = misc.get_time()
   packager.install_package(installed, 'Bekaboo/dropbar.nvim', 'dropbar')
   local dropbar = require('dropbar')
-  dropbar.setup()
+  dropbar.setup({
+    icons = nerd_font and {} or {
+      kinds = {
+        symbols = {
+          Array = '(arr)',
+          BlockMappingPair = '(blkmappair)',
+          Boolean = '(bool)',
+          BreakStatement = '(brk)',
+          Call = '(call)',
+          CaseStatement = '(case)',
+          Class = '(cls)',
+          Constant = '(const)',
+          Constructor = '(constr)',
+          ContinueStatment = '(cont)',
+          Copilot = '(copilot)',
+          Declaration = '(decl)',
+          Delete = '(del)',
+          DoStatement = '(do)',
+          Element = '(elem)',
+          Enum = '(enum)',
+          EnumMember = '(emumMem)',
+          Event = '(evt)',
+          Field = '(fld)',
+          File = '(f)',
+          Folder = '(d)',
+          ForStatement = '(for)',
+          Function = '(fn)',
+          GotoStatement = '(goto)',
+          Identifier = '(ident)',
+          IfStatement = '(if)',
+          Interface = '(intf)',
+          Keyword = '(kwd)',
+          List = '(list)',
+          Log = '(log)',
+          Lsp = '(lsp)',
+          Macro = '(mac)',
+          MarkdownH1 = '(h1)',
+          MarkdownH2 = '(h2)',
+          MarkdownH3 = '(h3)',
+          MarkdownH4 = '(h4)',
+          MarkdownH5 = '(h5)',
+          MarkdownH6 = '(h6)',
+          Method = '(mth)',
+          Module = '(mod)',
+          Namespace = "(ns)",
+          Null = '(nul)',
+          Number = '(num)',
+          Object = '(obj)',
+          Operator = '(oper)',
+          Package = '(pkg)',
+          Pair = '(pair)',
+          Property = '(prop)',
+          Reference = '(ref)',
+          Regex = '(regex)',
+          Repeat = '(rep)',
+          Return = '(ret)',
+          Rule = '(rule)',
+          RuleSet = '(ruleset)',
+          Scope = '(scope)',
+          Section = '(sec)',
+          Snippet = '(snip)',
+          Specifier = '(spec)',
+          Statement = '(stmt)',
+          String = '(str)',
+          Struct = '(struct)',
+          SwitchStatement = '(swit)',
+          Table = '(tbl)',
+          Terminal = '(term)',
+          Text = '(txt)',
+          Type = '(type)',
+          TypeParameter = '(typepar)',
+          Unit = '(unit)',
+          Value = '(val)',
+          Variable = '(var)',
+          WhileStatement = '(whl)'
+        }
+      },
+      ui = {
+        bar = {
+          separator = '> ',
+          extends = '...'
+        },
+        menu = {
+          separator = ' ',
+          indicator = '> '
+        }
+      }
+    }
+  })
   -- local end_time = misc.get_time()
   -- print('Breadcrubms Delta: ', misc.get_time_delta(start_time, end_time))
 end, 145)
@@ -167,7 +327,12 @@ vim.defer_fn(function()
   bufferline.setup({
     options = {
       nubmers = 'ordinal',
-      separator_style = 'slant'
+      separator_style = 'slant',
+      buffer_close_icon = nerd_font and '' or 'x',
+      close_icon = nerd_font and '' or 'x',
+      modified_icon = nerd_font and '' or 'm',
+      left_trunc_marker = nerd_font and '' or '/',
+      right_trunc_marker = nerd_font and '' or '\\',
     }
   })
   -- Go to buffer number with <Space> b <buffer_number><Enter>
@@ -244,6 +409,38 @@ vim.defer_fn(function()
   scrollbar.setup({
     handlers = {
       gitsigns = true
+    },
+    marks = nerd_font and {} or {
+      Cursor = {
+        text = "*"
+      },
+      Search = {
+        text = { "-", "=" }
+      },
+      Error = {
+        text = { "-", "=" }
+      },
+      Warn = {
+        text = { "-", "=" }
+      },
+      Info = {
+        text = { "-", "=" }
+      },
+      Hint = {
+        text = { "-", "=" }
+      },
+      Misc = {
+        text = { "-", "=" }
+      },
+      GitAdd = {
+        text = "|"
+      },
+      GitChange = {
+        text = "|"
+      },
+      GitDelete = {
+        text = "_"
+      },
     }
   })
   -- local end_time = misc.get_time()
