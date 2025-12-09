@@ -1,7 +1,7 @@
 local packager = require('lua/packager')
 local misc = require('lua/misc')
 
-local installed = {}
+INSTALLED = {}
 
 --- Nerd fonts are special programming fonts that provide icons.
 --- Set to false if you don't have a nerd font or can't guarantee
@@ -64,7 +64,7 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 --- Theme
 vim.defer_fn(function()
   -- local start_time = misc.get_time()
-  packager.install_package(installed, 'folke/tokyonight.nvim', 'tokyonight')
+  packager.install_package('folke/tokyonight.nvim', 'tokyonight')
   local theme = require('tokyonight')
   theme.setup()
   vim.cmd [[colorscheme tokyonight]]
@@ -76,7 +76,7 @@ end, 0)
 vim.defer_fn(function()
   if nerd_font then
     -- local start_time = misc.get_time()
-    packager.install_package(installed, 'nvim-tree/nvim-web-devicons', 'nvim-web-devicons')
+    packager.install_package('nvim-tree/nvim-web-devicons', 'nvim-web-devicons')
     local nvim_web_devicons = require('nvim-web-devicons')
     nvim_web_devicons.setup()
     -- local end_time = misc.get_time()
@@ -87,7 +87,7 @@ end, 30)
 --- File manager
 vim.defer_fn(function()
   -- local start_time = misc.get_time()
-  packager.install_package(installed, 'nvim-tree/nvim-tree.lua', 'nvim-tree')
+  packager.install_package('nvim-tree/nvim-tree.lua', 'nvim-tree')
   local nvim_tree = require('nvim-tree')
   nvim_tree.setup({
     disable_netrw = true,
@@ -149,7 +149,7 @@ end, 50)
 -- Picker
 vim.defer_fn(function()
   -- local start_time = misc.get_time()
-  packager.install_package(installed, 'nvim-mini/mini.nvim', 'mini.nvim')
+  packager.install_package('nvim-mini/mini.nvim', 'mini.nvim')
   local minipick = require('mini.pick')
   minipick.setup({
     source = {
@@ -170,7 +170,7 @@ end, 80)
 -- Status line
 vim.defer_fn(function()
   -- local start_time = misc.get_time()
-  packager.install_package(installed, 'nvim-mini/mini.nvim', 'mini.nvim')
+  packager.install_package('nvim-mini/mini.nvim', 'mini.nvim')
   local ministatusline = require('mini.statusline')
   ministatusline.setup({
     use_icons = nerd_font
@@ -197,7 +197,7 @@ end, 105)
 --- Git signs
 vim.defer_fn(function()
   -- local start_time = misc.get_time()
-  packager.install_package(installed, 'lewis6991/gitsigns.nvim', 'gitsigns')
+  packager.install_package('lewis6991/gitsigns.nvim', 'gitsigns')
   local gitsigns = require('gitsigns')
   gitsigns.setup({
     signs = {
@@ -224,7 +224,7 @@ end, 115)
 --- Breadcrumbs
 vim.defer_fn(function()
   -- local start_time = misc.get_time()
-  packager.install_package(installed, 'Bekaboo/dropbar.nvim', 'dropbar')
+  packager.install_package('Bekaboo/dropbar.nvim', 'dropbar')
   local dropbar = require('dropbar')
   dropbar.setup({
     icons = nerd_font and {} or {
@@ -322,7 +322,7 @@ end, 145)
 --- Tabs
 vim.defer_fn(function()
   -- local start_time = misc.get_time()
-  packager.install_package(installed, 'akinsho/bufferline.nvim', 'bufferline')
+  packager.install_package('akinsho/bufferline.nvim', 'bufferline')
   local bufferline = require('bufferline')
   bufferline.setup({
     options = {
@@ -349,7 +349,7 @@ end, 160)
 --- Formatting
 vim.defer_fn(function()
   -- local start_time = misc.get_time()
-  packager.install_package(installed, 'stevearc/conform.nvim', 'conform')
+  packager.install_package('stevearc/conform.nvim', 'conform')
   local conform = require('conform')
   conform.setup({
     formatters_by_ft = {
@@ -394,7 +394,7 @@ end, 195)
 --- Auto pairs
 vim.defer_fn(function()
   -- local start_time = misc.get_time()
-  packager.install_package(installed, 'nvim-mini/mini.nvim', 'mini.nvim')
+  packager.install_package('nvim-mini/mini.nvim', 'mini.nvim')
   local minipairs = require('mini.pairs')
   minipairs.setup()
   -- local end_time = misc.get_time()
@@ -404,7 +404,7 @@ end, 205)
 --- Scrollbar
 vim.defer_fn(function()
   -- local start_time = misc.get_time()
-  packager.install_package(installed, 'petertriho/nvim-scrollbar', 'nvim-scrollbar')
+  packager.install_package('petertriho/nvim-scrollbar', 'nvim-scrollbar')
   local scrollbar = require('scrollbar')
   scrollbar.setup({
     handlers = {
@@ -450,7 +450,7 @@ end, 215)
 --- Automatic indenting
 vim.defer_fn(function()
   -- local start_time = misc.get_time()
-  packager.install_package(installed, 'NMAC427/guess-indent.nvim', 'guess-indent.nvim')
+  packager.install_package('NMAC427/guess-indent.nvim', 'guess-indent.nvim')
   local guess_indent = require('guess-indent')
   guess_indent.setup({})
   vim.api.nvim_exec_autocmds('BufReadPost', { buffer = 0 })
@@ -461,7 +461,7 @@ end, 235)
 --- Zen mode
 vim.defer_fn(function()
   -- local start_time = misc.get_time()
-  packager.install_package(installed, 'folke/zen-mode.nvim', 'zen-mode')
+  packager.install_package('folke/zen-mode.nvim', 'zen-mode')
   local zen_mode = require('zen-mode')
   zen_mode.setup({
     window = {
@@ -476,7 +476,7 @@ end, 265)
 --- Relative number on in normal mode, off in insert mode
 vim.defer_fn(function()
   -- local start_time = misc.get_time()
-  packager.install_package(installed, 'sitiom/nvim-numbertoggle', 'nvim-numbertoggle')
+  packager.install_package('sitiom/nvim-numbertoggle', 'nvim-numbertoggle')
   -- local end_time = misc.get_time()
   -- print('Relative number Delta: ', misc.get_time_delta(start_time, end_time))
 end, 280)
@@ -484,7 +484,7 @@ end, 280)
 --- Lua support
 vim.defer_fn(function()
   -- local start_time = misc.get_time()
-  packager.install_package(installed, 'folke/lazydev.nvim', 'lazydev.nvim')
+  packager.install_package('folke/lazydev.nvim', 'lazydev.nvim')
   local lazydev = require('lazydev')
   lazydev.setup()
   vim.lsp.config('lua_ls', {
@@ -561,7 +561,7 @@ end, 3000)
 --- Markdown support
 vim.defer_fn(function()
   -- local start_time = misc.get_time()
-  packager.install_package(installed, 'MeanderingProgrammer/render-markdown.nvim', 'render-markdown')
+  packager.install_package('MeanderingProgrammer/render-markdown.nvim', 'render-markdown')
   local render_markdown = require('render-markdown')
   render_markdown.setup({
     completions = {
