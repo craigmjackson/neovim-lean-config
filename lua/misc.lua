@@ -26,4 +26,26 @@ function M.get_time_delta(start_time, end_time)
   return delta
 end
 
+function M.run_scheduler()
+  local active = true
+  while active do
+    active = false
+    for _, co in ipairs(TASKS) do
+      if coroutine.status(co) ~= "dead" then
+        active = true
+        local ok, err = coroutine.resume(co)
+        if not ok then
+          print("Coroutine error:", err)
+        end
+      end
+    end
+    -- vim.wait(10)
+  end
+end
+
+function M.add_task(fn)
+  local co = coroutine.create(fn)
+  table.insert(TASKS, co)
+end
+
 return M
