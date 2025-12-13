@@ -1,5 +1,4 @@
-local packager = require("lua/packager")
-local misc = require("lua/misc")
+local misc = require("misc")
 
 INSTALLED = {}
 TASKS = {}
@@ -203,7 +202,6 @@ local file_manager = coroutine.create(function()
     },
   })
   vim.keymap.set("n", "<c-n>", ":NvimTreeToggle<cr>", { noremap = true })
-  vim.keymap.set("n", "<leader>sn", ":NvimTreeToggle '" .. vim.fn.stdpath("config") .. "' <cr>", { noremap = true })
 end)
 
 --- Picker
@@ -241,8 +239,18 @@ local picker = coroutine.create(function()
     },
     show_icons = nerd_font,
   })
+  local pick_neovim_config = function()
+    local picked_filename = minipick.start({
+      source = {
+        items = vim.fn.readdir(vim.fn.stdpath("config")),
+      },
+    })
+    local filename_with_path = vim.fn.stdpath("config") .. "/" .. picked_filename
+    vim.cmd("edit " .. filename_with_path)
+  end
   vim.keymap.set("n", "<leader>sf", ":Pick files<cr>", { noremap = true })
   vim.keymap.set("n", "<leader>sg", ":Pick grep_live<cr>", { noremap = true })
+  vim.keymap.set("n", "<leader>sn", pick_neovim_config, { noremap = true })
 end)
 
 --- Status line
@@ -837,14 +845,6 @@ local javascript = coroutine.create(function()
   if not NPM then
     return
   end
-  if not misc.is_npm_package_installed("@vue/language-server") then
-    local output = vim.fn.system("npm -g install @vue/language-server")
-    if vim.v.shell_error == 0 then
-      vim.notify("@vue/language-server installed")
-    else
-      vim.notify("Error installing @vue/language-server: " .. output)
-    end
-  end
   if not misc.is_npm_package_installed("typescript") then
     local output = vim.fn.system("npm -g install typescript")
     if vim.v.shell_error == 0 then
@@ -871,9 +871,54 @@ local javascript = coroutine.create(function()
   end
   vim.lsp.config("ts_ls", {
     cmd = { "typescript-language-server", "--stdio" },
-    filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue" },
+    filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact" },
   })
   vim.lsp.enable("ts_ls")
+end)
+
+--- Vue.js support
+local vue = coroutine.create(function()
+  if not NPM then
+    return
+  end
+  if not misc.is_npm_package_installed("@vue/language-server") then
+    local output = vim.fn.system("npm -g install @vue/language-server")
+    if vim.v.shell_error == 0 then
+      vim.notify("@vue/language-server installed")
+    else
+      vim.notify("Error installing @vue/language-server: " .. output)
+    end
+  end
+  local vue_plugin = {
+    name = "@vue/typescript-plugin",
+    location = "/home/craig/.local/bin/vue-language-server",
+    languages = { "vue" },
+    configNamespace = "typescript",
+  }
+  -- local vtsls_config = {
+  --   settings = {
+  --     vtsls = {
+  --       tsserver = {
+  --         globalPlugins = {
+  --           vue_plugin,
+  --         },
+  --       },
+  --     },
+  --   },
+  --   filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue" },
+  -- }
+  local ts_ls_config = {
+    init_options = {
+      plugins = {
+        vue_plugin,
+      },
+    },
+    filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue" },
+  }
+  -- vim.lsp.config("vtsls", vtsls_config)
+  vim.lsp.config("vue_ls", {})
+  vim.lsp.config("ts_ls", ts_ls_config)
+  vim.lsp.enable({ "ts_ls", "vue_ls" })
 end)
 
 --- Markdown support
@@ -978,5 +1023,8 @@ vim.defer_fn(function()
   coroutine.resume(javascript)
 end, 8000)
 vim.defer_fn(function()
-  coroutine.resume(markdown)
+  coroutine.resume(vue)
 end, 8020)
+vim.defer_fn(function()
+  coroutine.resume(markdown)
+end, 8040)
