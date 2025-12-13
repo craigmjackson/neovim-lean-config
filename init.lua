@@ -882,46 +882,53 @@ local vue = coroutine.create(function()
     return
   end
   if not misc.is_npm_package_installed("@vue/language-server") then
-    local output = vim.fn.system("npm -g install @vue/language-server")
+    local output = vim.fn.system("npm -g install @vue/language-server@2.2.8")
     if vim.v.shell_error == 0 then
-      vim.notify("@vue/language-server installed")
+      vim.notify("@vue/language-server@2.2.8 installed")
     else
-      vim.notify("Error installing @vue/language-server: " .. output)
+      vim.notify("Error installing @vue/language-server@2.2.8: " .. output)
     end
   end
-  local vue_plugin = {
-    name = "@vue/typescript-plugin",
-    location = "/home/craig/.local/bin/vue-language-server",
-    languages = { "vue" },
-    configNamespace = "typescript",
-  }
-  -- local vtsls_config = {
-  --   settings = {
-  --     vtsls = {
-  --       tsserver = {
-  --         globalPlugins = {
-  --           vue_plugin,
-  --         },
-  --       },
-  --     },
-  --   },
-  --   filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue" },
-  -- }
-  local ts_ls_config = {
-    init_options = {
-      plugins = {
-        vue_plugin,
-      },
-    },
-    filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue" },
-  }
-  -- vim.lsp.config("vtsls", vtsls_config)
-  vim.lsp.config("vue_ls", {})
-  vim.lsp.config("ts_ls", ts_ls_config)
-  vim.lsp.enable({ "ts_ls", "vue_ls" })
+  if not misc.is_npm_package_installed("@vue/typescript-plugin") then
+    local output = vim.fn.system("npm -g install @vue/typescript-plugin")
+    if vim.v.shell_error == 0 then
+      vim.notify("@vue/typescript-plugin installed")
+    else
+      vim.notify("Error installing @vue/typescript-plugin: " .. output)
+    end
+  end
 end)
 
---- Markdown support
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "vue",
+  callback = function()
+    vim.lsp.start({
+      name = "volar",
+      cmd = { "vue-language-server", "--stdio" },
+      root_dir = vim.fs.root(0, { "package.json", ".git" }),
+
+      capabilities = (function()
+        local c = vim.lsp.protocol.make_client_capabilities()
+        c.textDocument.completion.completionItem.snippetSupport = true
+        -- 🚑 WORKAROUND
+        c.textDocument.semanticTokens = nil
+        return c
+      end)(),
+
+      init_options = {
+        vue = { hybridMode = false },
+        typescript = {
+          tsdk = vim.fn.trim(vim.fn.system("npm root -g")) .. "/typescript/lib",
+        },
+      },
+      filetypes = {
+        "vue",
+      },
+    })
+  end,
+})
+
+-- Markdown support
 local markdown = coroutine.create(function()
   if not GITHUB then
     return
