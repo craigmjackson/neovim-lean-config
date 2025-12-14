@@ -899,31 +899,21 @@ local vue = coroutine.create(function()
   end
 end)
 
--- Minimal Volar setup for Neovim 0.11
+-- Minimal Volar setup with multi-buffer diagnostics and auto-refresh
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "vue",
   callback = function()
-    -- Prevent starting multiple clients
-    for _, client in ipairs(vim.lsp.get_active_clients()) do
-      if client.name == "volar" then
-        return
-      end
-    end
-
-    -- Detect project root
     local function get_root_dir()
-      local cwd = vim.fn.getcwd()
+      local path = vim.fn.expand("%:p") -- current buffer
       local markers = { "package.json", ".git" }
       for _, m in ipairs(markers) do
-        local found = vim.fn.findfile(m, cwd .. ";")
+        local found = vim.fn.findfile(m, path .. ";")
         if found ~= "" then
           return vim.fn.fnamemodify(found, ":p:h")
         end
       end
-      return cwd
+      return vim.fn.fnamemodify(path, ":h")
     end
-
-    -- Detect TypeScript path
     local tsdk_path
     local local_ts = vim.fn.getcwd() .. "/node_modules/typescript/lib"
     if vim.fn.isdirectory(local_ts) == 1 then
@@ -931,42 +921,59 @@ vim.api.nvim_create_autocmd("FileType", {
     else
       tsdk_path = vim.fn.trim(vim.fn.system("npm root -g")) .. "/typescript/lib"
     end
-
     if vim.fn.isdirectory(tsdk_path) == 0 then
       print("Warning: TypeScript not found at " .. tsdk_path)
     end
-
-    -- Start Volar
-    local client_id = vim.lsp.start({
-      name = "volar",
-      cmd = { "vue-language-server", "--stdio" },
-      root_dir = get_root_dir(),
-      filetypes = { "vue" },
-      capabilities = (function()
-        local c = vim.lsp.protocol.make_client_capabilities()
-        c.textDocument.completion.completionItem.snippetSupport = true
-        c.textDocument.semanticTokens = nil
-        return c
-      end)(),
-      init_options = {
-        vue = { hybridMode = false },
-        typescript = { tsdk = tsdk_path },
-      },
+    local volar_client
+    for _, c in ipairs(vim.lsp.get_clients()) do
+      if c.name == "volar" then
+        volar_client = c
+        break
+      end
+    end
+    if not volar_client then
+      local client_id = vim.lsp.start({
+        name = "volar",
+        cmd = { "vue-language-server", "--stdio" },
+        root_dir = get_root_dir(),
+        filetypes = { "vue" },
+        capabilities = (function()
+          local c = vim.lsp.protocol.make_client_capabilities()
+          c.textDocument.completion.completionItem.snippetSupport = true
+          c.textDocument.semanticTokens = nil
+          return c
+        end)(),
+        init_options = {
+          vue = { hybridMode = false },
+          typescript = { tsdk = tsdk_path },
+        },
+      })
+      volar_client = vim.lsp.get_client_by_id(client_id)
+    end
+    vim.lsp.buf_attach_client(0, volar_client.id)
+    local function refresh_diagnostics(bufnr)
+      bufnr = bufnr or 0
+      local clients = vim.lsp.get_clients({ bufnr = bufnr })
+      for _, c in ipairs(clients) do
+        if c.name == "volar" then
+          -- Only send request if client supports diagnostics
+          if c.supports_method("textDocument/diagnostic") then
+            vim.lsp.buf_request(
+              bufnr,
+              "textDocument/diagnostic",
+              vim.lsp.util.make_text_document_params(),
+              function() end
+            )
+          end
+        end
+      end
+    end
+    vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost" }, {
+      pattern = "*.vue",
+      callback = function()
+        refresh_diagnostics()
+      end,
     })
-
-    -- Attach the client to the current buffer
-    vim.lsp.buf_attach_client(0, client_id)
-    vim.diagnostic.config({
-      virtual_text = {
-        source = false,
-      },
-      severity_sort = true,
-      float = { border = "rounded", source = "if_many" },
-      underline = { severity = vim.diagnostic.severity.ERROR },
-    })
-
-    -- Notify user
-    print("Volar attached! TS diagnostics active in <script> blocks.")
   end,
 })
 
