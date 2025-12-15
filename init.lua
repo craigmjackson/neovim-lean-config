@@ -59,7 +59,7 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 })
 
 --- Packages
-local packages_co = coroutine.create(function()
+local first_packages_co = coroutine.create(function()
   misc.promise_all({
     --- Theme
     packager.install_package("tokyonight", "folke/tokyonight.nvim"),
@@ -69,6 +69,10 @@ local packages_co = coroutine.create(function()
     packager.install_package("nvim-tree", "nvim-tree/nvim-tree.lua"),
     --- Collection of small packages
     packager.install_package("mini.nvim", "nvim-mini/mini.nvim"),
+  })
+end)
+local second_packages_co = coroutine.create(function()
+  misc.promise_all({
     --- Git icons in sign column
     packager.install_package("gitsigns", "lewis6991/gitsigns.nvim"),
     --- Breadcrumbs
@@ -103,120 +107,147 @@ local packages_co = coroutine.create(function()
     packager.install_npm("@vue/typescript-plugin"),
     --- Render Markdown files in the editor
     packager.install_package("render-markdown", "MeanderingProgrammer/render-markdown.nvim"),
-    --- Relative number on in normal mode, off in insert mode
   })
 end)
-
-misc.run_coroutine(packages_co)
 
 --- Theme
-local theme = coroutine.create(function()
-  local tokyonight = packager.try_require("tokyonight")
-  if not tokyonight then
-    return false
+local function load_theme()
+  return function(cb)
+    local tokyonight = packager.try_require("tokyonight")
+    if not tokyonight then
+      cb(false, nil)
+    end
+    tokyonight.setup()
+    vim.cmd("colorscheme tokyonight")
+    cb(true, nil)
   end
-  tokyonight.setup()
-  vim.cmd("colorscheme tokyonight")
-end)
+end
 
 --- Icons
-local icons = coroutine.create(function()
-  local nvim_web_devicons = packager.try_require("nvim-web-devicons")
-  if not nvim_web_devicons then
-    return false
+local function load_icons()
+  return function(cb)
+    local nvim_web_devicons = packager.try_require("nvim-web-devicons")
+    if not nvim_web_devicons then
+      cb(false, nil)
+    end
+    require("nvim-web-devicons").setup()
+    cb(true, nil)
   end
-  require("nvim-web-devicons").setup()
-end)
+end
 
 --- File manager
-local file_manager = coroutine.create(function()
-  local nvim_tree = packager.try_require("nvim-tree")
-  if not nvim_tree then
-    return false
-  end
-  nvim_tree.setup({
-    disable_netrw = true,
-    hijack_netrw = true,
-    filters = {
-      git_ignored = false,
-    },
-    actions = {
-      open_file = {
-        quit_on_open = true,
+local function load_file_manager()
+  return function(cb)
+    local nvim_tree = packager.try_require("nvim-tree")
+    if not nvim_tree then
+      cb(false, nil)
+    end
+    nvim_tree.setup({
+      disable_netrw = true,
+      hijack_netrw = true,
+      filters = {
+        git_ignored = false,
       },
-    },
-    renderer = {
-      icons = {
-        web_devicons = {
-          file = {
-            enable = nerd_font,
-            color = true,
-          },
-          folder = {
-            enable = nerd_font,
-            color = true,
-          },
-        },
-        glyphs = nerd_font and {} or {
-          default = "",
-          symlink = "",
-          bookmark = "",
-          modified = "m",
-          hidden = "",
-          folder = {
-            arrow_closed = ">",
-            arrow_open = "v",
-            default = "d",
-            open = "d",
-            empty = "d",
-            empty_open = "d",
-            symlink = "ds",
-            symlink_open = "ds",
-          },
-          git = {
-            unstaged = "",
-            staged = "s",
-            unmerged = "",
-            untracked = "",
-            deleted = "d",
-            ignored = "",
-          },
+      actions = {
+        open_file = {
+          quit_on_open = true,
         },
       },
-    },
-  })
-  vim.keymap.set("n", "<c-n>", ":NvimTreeToggle<cr>", { noremap = true })
-end)
-
---- Picker
-local picker = coroutine.create(function()
-  local minipick = packager.try_require("mini.pick")
-  if not minipick then
-    return false
-  end
-  minipick.setup({
-    source = {
-      show = minipick.default_show,
-    },
-    window = {
-      prompt_caret = "|",
-      prompt_prefix = "> ",
-    },
-    show_icons = nerd_font,
-  })
-  local pick_neovim_config = function()
-    local picked_filename = minipick.start({
-      source = {
-        items = vim.fn.readdir(vim.fn.stdpath("config")),
+      renderer = {
+        icons = {
+          web_devicons = {
+            file = {
+              enable = nerd_font,
+              color = true,
+            },
+            folder = {
+              enable = nerd_font,
+              color = true,
+            },
+          },
+          glyphs = nerd_font and {} or {
+            default = "",
+            symlink = "",
+            bookmark = "",
+            modified = "m",
+            hidden = "",
+            folder = {
+              arrow_closed = ">",
+              arrow_open = "v",
+              default = "d",
+              open = "d",
+              empty = "d",
+              empty_open = "d",
+              symlink = "ds",
+              symlink_open = "ds",
+            },
+            git = {
+              unstaged = "",
+              staged = "s",
+              unmerged = "",
+              untracked = "",
+              deleted = "d",
+              ignored = "",
+            },
+          },
+        },
       },
     })
-    local filename_with_path = vim.fn.stdpath("config") .. "/" .. picked_filename
-    vim.cmd("edit " .. filename_with_path)
+    vim.keymap.set("n", "<c-n>", ":NvimTreeToggle<cr>", { noremap = true })
+    cb(true, nil)
   end
-  vim.keymap.set("n", "<leader>sf", ":Pick files<cr>", { noremap = true })
-  vim.keymap.set("n", "<leader>sg", ":Pick grep_live<cr>", { noremap = true })
-  vim.keymap.set("n", "<leader>sn", pick_neovim_config, { noremap = true })
+end
+
+--- Picker
+local function load_picker()
+  return function(cb)
+    local minipick = packager.try_require("mini.pick")
+    if not minipick then
+      cb(false, nil)
+    end
+    minipick.setup({
+      source = {
+        show = minipick.default_show,
+      },
+      window = {
+        prompt_caret = "|",
+        prompt_prefix = "> ",
+      },
+      show_icons = nerd_font,
+    })
+    local pick_neovim_config = function()
+      local picked_filename = minipick.start({
+        source = {
+          items = vim.fn.readdir(vim.fn.stdpath("config")),
+        },
+      })
+      local filename_with_path = vim.fn.stdpath("config") .. "/" .. picked_filename
+      vim.cmd("edit " .. filename_with_path)
+    end
+    vim.keymap.set("n", "<leader>sf", ":Pick files<cr>", { noremap = true })
+    vim.keymap.set("n", "<leader>sg", ":Pick grep_live<cr>", { noremap = true })
+    vim.keymap.set("n", "<leader>sn", pick_neovim_config, { noremap = true })
+    cb(true, nil)
+  end
+end
+
+local first_loads_co = coroutine.create(function()
+  misc.promise_all({
+    --- Theme
+    load_theme(),
+    --- Icons for file manager
+    load_icons(),
+    --- File manager
+    load_file_manager(),
+    --- Collection of small packages
+    load_picker,
+  })
 end)
+misc.run_coroutine(first_packages_co)
+misc.run_coroutine(first_loads_co)
+vim.defer_fn(function()
+  misc.run_coroutine(second_packages_co)
+end, 1000)
 
 --- Status line
 local status_line = coroutine.create(function()
@@ -672,18 +703,6 @@ local markdown = coroutine.create(function()
   })
 end)
 
-vim.defer_fn(function()
-  coroutine.resume(theme)
-end, 0)
-vim.defer_fn(function()
-  coroutine.resume(icons)
-end, 500)
-vim.defer_fn(function()
-  coroutine.resume(file_manager)
-end, 1000)
-vim.defer_fn(function()
-  coroutine.resume(picker)
-end, 5000)
 vim.defer_fn(function()
   coroutine.resume(status_line)
 end, 5200)
