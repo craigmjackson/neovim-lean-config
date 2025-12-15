@@ -10,12 +10,6 @@ function M.in_table(tbl, val)
   return false
 end
 
--- Get if NPM package is installed
-function M.is_npm_package_installed(package_name)
-  vim.fn.system("npm list -g " .. package_name)
-  return vim.v.shell_error == 0
-end
-
 function M.get_time()
   local current_time = vim.fn.reltimefloat(vim.fn.reltime())
   return current_time * 1000
@@ -26,26 +20,50 @@ function M.get_time_delta(start_time, end_time)
   return delta
 end
 
-function M.run_scheduler()
-  local active = true
-  while active do
-    active = false
-    for _, co in ipairs(TASKS) do
-      if coroutine.status(co) ~= "dead" then
-        active = true
-        local ok, err = coroutine.resume(co)
-        if not ok then
-          print("Coroutine error:", err)
-        end
-      end
+function M.promise_all(tasks)
+  return coroutine.yield(function(resume)
+    local remaining = #tasks
+    local results = {}
+    local done = false
+    if remaining == 0 then
+      resume(results)
+      return
     end
-    -- vim.wait(10)
-  end
+    for i, task in ipairs(tasks) do
+      task(function(ok, value)
+        if done then
+          return
+        end
+
+        if not ok then
+          done = true
+          resume(nil, value) -- reject
+          return
+        end
+
+        results[i] = value
+        remaining = remaining - 1
+
+        if remaining == 0 then
+          done = true
+          resume(results)
+        end
+      end)
+    end
+  end)
 end
 
-function M.add_task(fn)
-  local co = coroutine.create(fn)
-  table.insert(TASKS, co)
+function M.run_coroutine(co)
+  local function step(...)
+    local ok, wait = coroutine.resume(co, ...)
+    if not ok then
+      error(wait)
+    end
+    if coroutine.status(co) ~= "dead" then
+      wait(step)
+    end
+  end
+  step()
 end
 
 return M

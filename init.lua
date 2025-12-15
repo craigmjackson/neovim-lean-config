@@ -1,7 +1,5 @@
 local misc = require("misc")
-
-INSTALLED = {}
-TASKS = {}
+local packager = require("packager")
 
 --- Nerd fonts are special programming fonts that provide icons.
 --- Set to false if you don't have a nerd font or can't guarantee
@@ -52,7 +50,6 @@ vim.opt.winblend = 30
 -- Clear search highlighting with <Esc>
 vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
 
---- Autocommands
 -- Highlight when yanking text
 vim.api.nvim_create_autocmd("TextYankPost", {
   group = vim.api.nvim_create_augroup("highlight-yank", { clear = true }),
@@ -61,96 +58,83 @@ vim.api.nvim_create_autocmd("TextYankPost", {
   end,
 })
 
-GITHUB = false
-local _ = vim.fn.system("echo > /dev/tcp/github.com/443")
-if vim.v.shell_error == 0 then
-  GITHUB = true
-end
+--- Packages
+local packages_co = coroutine.create(function()
+  misc.promise_all({
+    --- Theme
+    packager.install_package("tokyonight", "folke/tokyonight.nvim"),
+    --- Icons for file manager
+    packager.install_package("nvim-web-devicons", "nvim-tree/nvim-web-devicons"),
+    --- File manager
+    packager.install_package("nvim-tree", "nvim-tree/nvim-tree.lua"),
+    --- Collection of small packages
+    packager.install_package("mini.nvim", "nvim-mini/mini.nvim"),
+    --- Git icons in sign column
+    packager.install_package("gitsigns", "lewis6991/gitsigns.nvim"),
+    --- Breadcrumbs
+    packager.install_package("dropbar", "Bekaboo/dropbar.nvim"),
+    --- Tabs
+    packager.install_package("bufferline", "akinsho/bufferline.nvim"),
+    --- Auto-complete
+    packager.install_package("conform", "stevearc/conform.nvim"),
+    --- Formatting for JavaScript
+    packager.install_npm("prettier"),
+    --- Scrollbar
+    packager.install_package("nvim-scrollbar", "petertriho/nvim-scrollbar"),
+    --- Indenting
+    packager.install_package("guess-indent", "NMAC427/guess-indent.nvim"),
+    --- Zen mode
+    packager.install_package("zen-mode", "folke/zen-mode.nvim"),
+    --- Relative number on in normal mode, off in insert mode
+    packager.install_package("nvim-numbertoggle", "sitiom/nvim-numbertoggle"),
+    --- NeoVim API support in lua
+    packager.install_package("lazydev", "folke/lazydev.nvim"),
+    --- Pyton language server
+    packager.install_npm("pyright"),
+    --- Bash language server
+    packager.install_npm("bash-language-server"),
+    --- TypeScript SDK
+    packager.install_npm("typescript"),
+    --- TypeScript language server
+    packager.install_npm("typescript-language-server"),
+    --- Vue.js language server
+    packager.install_npm("@vue/language-server"),
+    --- Vue.js plugin for TypeScript language server
+    packager.install_npm("@vue/typescript-plugin"),
+    --- Render Markdown files in the editor
+    packager.install_package("render-markdown", "MeanderingProgrammer/render-markdown.nvim"),
+    --- Relative number on in normal mode, off in insert mode
+  })
+end)
 
-NPM = false
-local _ = vim.fn.system("echo > /dev/tcp/registry.npmjs.org/443")
-if vim.v.shell_error == 0 then
-  NPM = true
-end
+misc.run_coroutine(packages_co)
 
 --- Theme
 local theme = coroutine.create(function()
-  if not GITHUB then
-    return
+  local tokyonight = packager.try_require("tokyonight")
+  if not tokyonight then
+    return false
   end
-  local install_path = vim.fn.stdpath("data") .. "/site/pack/packages/opt/tokyonight"
-  if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-    vim.notify("Installing folke/tokyonight to " .. install_path .. "...", vim.log.levels.INFO)
-    local output = vim.fn.system({
-      "git",
-      "clone",
-      "--depth",
-      "1",
-      "https://github.com/folke/tokyonight.nvim",
-      install_path,
-    })
-    if vim.v.shell_error == 0 then
-      vim.notify("tokyonight installed")
-    else
-      vim.notify("Error installing tokyonight: " .. output)
-    end
-  end
-  vim.cmd("packadd tokyonight")
+  tokyonight.setup()
   vim.cmd("colorscheme tokyonight")
 end)
 
 --- Icons
 local icons = coroutine.create(function()
-  if not GITHUB then
-    return
+  local nvim_web_devicons = packager.try_require("nvim-web-devicons")
+  if not nvim_web_devicons then
+    return false
   end
-  local install_path = vim.fn.stdpath("data") .. "/site/pack/packages/opt/nvim-web-devicons"
-  if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-    vim.notify("Installing nvim-tree/nvim-web-devicons...", vim.log.levels.INFO)
-    local output = vim.fn.system({
-      "git",
-      "clone",
-      "--depth",
-      "1",
-      "https://github.com/nvim-tree/nvim-web-devicons",
-      install_path,
-    })
-    if vim.v.shell_error == 0 then
-      vim.notify("nvim-web-devicons installed")
-    else
-      vim.notify("Error installing nvim-web-devicons: " .. output)
-    end
-  end
-  vim.cmd("packadd nvim-web-devicons")
-  vim.cmd("packloadall")
   require("nvim-web-devicons").setup()
 end)
 
 --- File manager
 local file_manager = coroutine.create(function()
-  if not GITHUB then
-    return
+  local nvim_tree = packager.try_require("nvim-tree")
+  if not nvim_tree then
+    return false
   end
-  local install_path = vim.fn.stdpath("data") .. "/site/pack/packages/opt/nvim-tree"
-  if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-    vim.notify("Installing nvim-tree/nvim-tree.lua...", vim.log.levels.INFO)
-    local output = vim.fn.system({
-      "git",
-      "clone",
-      "--depth",
-      "1",
-      "https://github.com/nvim-tree/nvim-tree.lua",
-      install_path,
-    })
-    if vim.v.shell_error == 0 then
-      vim.notify("nvim-tree installed")
-    else
-      vim.notify("Error executing nvim-tree: " .. output)
-    end
-  end
-  vim.cmd("packadd nvim-tree")
-  vim.cmd("packloadall")
-  require("nvim-tree").setup({
+  nvim_tree.setup({
     disable_netrw = true,
     hijack_netrw = true,
     filters = {
@@ -206,29 +190,10 @@ end)
 
 --- Picker
 local picker = coroutine.create(function()
-  if not GITHUB then
-    return
+  local minipick = packager.try_require("mini.pick")
+  if not minipick then
+    return false
   end
-  local install_path = vim.fn.stdpath("data") .. "/site/pack/packages/opt/mini.nvim"
-  if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-    vim.notify("Installing nvim-mini/mini.nvim...", vim.log.levels.INFO)
-    local output = vim.fn.system({
-      "git",
-      "clone",
-      "--depth",
-      "1",
-      "https://github.com/nvim-mini/mini.nvim",
-      install_path,
-    })
-    if vim.v.shell_error == 0 then
-      vim.notify("mini.nvim installed")
-    else
-      vim.notify("Error installing mini.nvim: " .. output)
-    end
-  end
-  vim.cmd("packadd mini.nvim")
-  vim.cmd("packloadall")
-  local minipick = require("mini.pick")
   minipick.setup({
     source = {
       show = minipick.default_show,
@@ -255,29 +220,11 @@ end)
 
 --- Status line
 local status_line = coroutine.create(function()
-  if not GITHUB then
-    return
+  local statusline = packager.try_require("mini.statusline")
+  if not statusline then
+    return false
   end
-  local install_path = vim.fn.stdpath("data") .. "/site/pack/packages/opt/mini.nvim"
-  if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-    vim.notify("Installing nvim-mini/mini.nvim...", vim.log.levels.INFO)
-    local output = vim.fn.system({
-      "git",
-      "clone",
-      "--depth",
-      "1",
-      "https://github.com/nvim-mini/mini.nvim",
-      install_path,
-    })
-    if vim.v.shell_error == 0 then
-      vim.notify("mini.nvim installed")
-    else
-      vim.notify("Error installing mini.nvim: " .. output)
-    end
-  end
-  vim.cmd("packadd mini.nvim")
-  vim.cmd("packloadall")
-  require("mini.statusline").setup({
+  statusline.setup({
     use_icons = nerd_font,
   })
 end)
@@ -296,29 +243,11 @@ end)
 
 --- Git signs
 local gitsigns = coroutine.create(function()
-  if not GITHUB then
-    return
+  local git_signs = packager.try_require("gitsigns")
+  if not git_signs then
+    return false
   end
-  local install_path = vim.fn.stdpath("data") .. "/site/pack/packages/opt/gitsigns"
-  if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-    vim.notify("Installing lewis6991/gitsigns.nvim...", vim.log.levels.INFO)
-    local output = vim.fn.system({
-      "git",
-      "clone",
-      "--depth",
-      "1",
-      "https://github.com/lewis6991/gitsigns.nvim",
-      install_path,
-    })
-    if vim.v.shell_error == 0 then
-      vim.notify("gitsigns installed")
-    else
-      vim.notify("Error installing gitsigns: " .. output)
-    end
-  end
-  vim.cmd("packadd gitsigns")
-  vim.cmd("packloadall")
-  require("gitsigns").setup({
+  git_signs.setup({
     signs = {
       add = { text = "|" },
       change = { text = "|" },
@@ -340,29 +269,11 @@ end)
 
 --- Breadcrumbs
 local breadcrumbs = coroutine.create(function()
-  if not GITHUB then
-    return
+  local dropbar = packager.try_require("dropbar")
+  if not dropbar then
+    return false
   end
-  local install_path = vim.fn.stdpath("data") .. "/site/pack/packages/opt/dropbar"
-  if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-    vim.notify("Installing Bekaboo/dropbar.nvim...", vim.log.levels.INFO)
-    local outout = vim.fn.system({
-      "git",
-      "clone",
-      "--depth",
-      "1",
-      "https://github.com/Bekaboo/dropbar.nvim",
-      install_path,
-    })
-    if vim.v.shell_error == 0 then
-      vim.notify("dropbar installed")
-    else
-      vim.notify("Error installing dropbar: " .. output)
-    end
-  end
-  vim.cmd("packadd dropbar")
-  vim.cmd("packloadall")
-  require("dropbar").setup({
+  dropbar.setup({
     icons = nerd_font and {} or {
       kinds = {
         symbols = {
@@ -455,29 +366,11 @@ end)
 
 --- Tabs
 local tabs = coroutine.create(function()
-  if not GITHUB then
-    return
+  local bufferline = packager.try_require("bufferline")
+  if not bufferline then
+    return false
   end
-  local install_path = vim.fn.stdpath("data") .. "/site/pack/packages/opt/bufferline"
-  if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-    vim.notify("Installing akinsho/bufferline.nvim...", vim.log.levels.INFO)
-    local output = vim.fn.system({
-      "git",
-      "clone",
-      "--depth",
-      "1",
-      "https://github.com/akinsho/bufferline.nvim",
-      install_path,
-    })
-    if vim.v.shell_error == 0 then
-      vim.notify("bufferline installed")
-    else
-      vim.notify("Error installing bufferline: " .. output)
-    end
-  end
-  vim.cmd("packadd bufferline")
-  vim.cmd("packloadall")
-  require("bufferline").setup({
+  bufferline.setup({
     options = {
       nubmers = "ordinal",
       separator_style = "slant",
@@ -504,40 +397,11 @@ end)
 
 --- Formatting
 local formatting = coroutine.create(function()
-  if not GITHUB then
-    return
+  local conform = packager.try_require("conform")
+  if not conform then
+    return false
   end
-  if not NPM then
-    return
-  end
-  local install_path = vim.fn.stdpath("data") .. "/site/pack/packages/opt/conform"
-  if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-    vim.notify("Installing stevearc/conform.nvim...", vim.log.levels.INFO)
-    local output = vim.fn.system({
-      "git",
-      "clone",
-      "--depth",
-      "1",
-      "https://github.com/stevearc/conform.nvim",
-      install_path,
-    })
-    if vim.v.shell_error == 0 then
-      vim.notify("conform.nvim installed")
-    else
-      vim.notify("Error installing conform.nvim: " .. output)
-    end
-  end
-  if not misc.is_npm_package_installed("prettier") then
-    local output = vim.fn.system("npm -g install prettier")
-    if vim.v.shell_error == 0 then
-      vim.notify("prettier installed")
-    else
-      vim.notify("Error installing prettier: " .. output)
-    end
-  end
-  vim.cmd("packadd conform")
-  vim.cmd("packloadall")
-  require("conform").setup({
+  conform.setup({
     formatters_by_ft = {
       lua = { "stylua" },
       python = { "isort", "black" },
@@ -553,9 +417,6 @@ end)
 
 --- LSP configuration
 local lsp_config = coroutine.create(function()
-  if not GITHUB then
-    return
-  end
   vim.api.nvim_create_autocmd("LspAttach", {
     callback = function(event)
       -- Goto definition
@@ -578,56 +439,20 @@ end)
 
 --- Auto pairs
 local auto_pairs = coroutine.create(function()
-  if not GITHUB then
-    return
+  local mini_pairs = packager.try_require("mini.pairs")
+  if not mini_pairs then
+    return false
   end
-  local install_path = vim.fn.stdpath("data") .. "/site/pack/packages/opt/mini.nvim"
-  if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-    vim.notify("Installing nvim-mini/mini.nvim...", vim.log.levels.INFO)
-    local output = vim.fn.system({
-      "git",
-      "clone",
-      "--depth",
-      "1",
-      "https://github.com/nvim-mini/mini.nvim",
-      install_path,
-    })
-    if vim.v.shell_error == 0 then
-      vim.notify("mini.nvim installed")
-    else
-      vim.notify("Error installing mini.nvim: " .. output)
-    end
-  end
-  vim.cmd("packadd mini.nvim")
-  vim.cmd("packloadall")
-  require("mini.pairs").setup()
+  mini_pairs.setup()
 end)
 
 --- Scrollbar
 local scrollbar = coroutine.create(function()
-  if not GITHUB then
-    return
+  local scroll_bar = packager.try_require("scrollbar")
+  if not scroll_bar then
+    return false
   end
-  local install_path = vim.fn.stdpath("data") .. "/site/pack/packages/opt/nvim-scrollbar"
-  if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-    vim.notify("Installing petertriho/nvim-scollbar...", vim.log.levels.INFO)
-    local output = vim.fn.system({
-      "git",
-      "clone",
-      "--depth",
-      "1",
-      "https://github.com/petertriho/nvim-scrollbar",
-      install_path,
-    })
-    if vim.v.shell_error == 0 then
-      vim.notify("nvim-scrollbar installed")
-    else
-      vim.notify("Error installing nvim-scrollbar: " .. output)
-    end
-  end
-  vim.cmd("packadd nvim-scrollbar")
-  vim.cmd("packloadall")
-  require("scrollbar").setup({
+  scroll_bar.setup({
     handlers = {
       gitsigns = true,
     },
@@ -668,57 +493,21 @@ end)
 
 --- Automatic indenting
 local indent = coroutine.create(function()
-  if not GITHUB then
-    return
+  local guess_indent = packager.try_require("guess-indent")
+  if not guess_indent then
+    return false
   end
-  local install_path = vim.fn.stdpath("data") .. "/site/pack/packages/opt/guess-indent.nvim"
-  if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-    vim.notify("Installing NMAC427/guess-indent.nvim...", vim.log.levels.INFO)
-    local output = vim.fn.system({
-      "git",
-      "clone",
-      "--depth",
-      "1",
-      "https://github.com/NMAC427/guess-indent.nvim",
-      install_path,
-    })
-    if vim.v.shell_error == 0 then
-      vim.notify("guess-indent installed")
-    else
-      vim.notify("Error installing guess-indent: " .. output)
-    end
-  end
-  vim.cmd("packadd guess-indent.nvim")
-  vim.cmd("packloadall")
-  require("guess-indent").setup({})
+  guess_indent.setup({})
   vim.api.nvim_exec_autocmds("BufReadPost", { buffer = 0 })
 end)
 
 --- Zen mode
 local zen_mode = coroutine.create(function()
-  if not GITHUB then
-    return
+  local zenmode = packager.try_require("zen-mode")
+  if not zenmode then
+    return false
   end
-  local install_path = vim.fn.stdpath("data") .. "/site/pack/packages/opt/zen-mode"
-  if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-    vim.notify("Installing folke/zen-mode.nvim...", vim.log.levels.INFO)
-    local output = vim.fn.system({
-      "git",
-      "clone",
-      "--depth",
-      "1",
-      "https://github.com/folke/zen-mode.nvim",
-      install_path,
-    })
-    if vim.v.shell_error == 0 then
-      vim.notify("zen-mode installed")
-    else
-      vim.notify("Error installing zen-mode: " .. output)
-    end
-  end
-  vim.cmd("packadd zen-mode")
-  vim.cmd("packloadall")
-  require("zen-mode").setup({
+  zenmode.setup({
     window = {
       width = 0.95,
     },
@@ -726,57 +515,13 @@ local zen_mode = coroutine.create(function()
   vim.keymap.set("n", "<leader>z", ":ZenMode<cr>", { noremap = true })
 end)
 
---- Relative number on in normal mode, off in insert mode
-local number_toggle = coroutine.create(function()
-  if not GITHUB then
-    return
-  end
-  local install_path = vim.fn.stdpath("data") .. "/site/pack/packages/opt/nvim-numbertoggle"
-  if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-    vim.notify("Installing sitiom/nvim-numbertoggle...", vim.log.levels.INFO)
-    local output = vim.fn.system({
-      "git",
-      "clone",
-      "--depth",
-      "1",
-      "https://github.com/sitiom/nvim-numbertoggle",
-      install_path,
-    })
-    if vim.v.shell_error == 0 then
-      vim.notify("nvim-numbertoggle installed")
-    else
-      vim.notify("Error installing nvim-numbertoggle: " .. output)
-    end
-  end
-  vim.cmd("packadd nvim-numbertoggle")
-  vim.cmd("packloadall")
-end)
-
 --- Lua support
 local lua = coroutine.create(function()
-  if not GITHUB then
-    return
+  local lazydev = packager.try_require("lazydev")
+  if not lazydev then
+    return false
   end
-  local install_path = vim.fn.stdpath("data") .. "/site/pack/packages/opt/lazydev.nvim"
-  if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-    vim.notify("Installing folke/lazydev.nvim...", vim.log.levels.INFO)
-    local output = vim.fn.system({
-      "git",
-      "clone",
-      "--depth",
-      "1",
-      "https://github.com/folke/lazydev.nvim",
-      install_path,
-    })
-    if vim.v.shell_error == 0 then
-      vim.notify("lazydev installed")
-    else
-      vim.notify("Error installing lazydev: " .. output)
-    end
-  end
-  vim.cmd("packadd lazydev.nvim")
-  vim.cmd("packloadall")
-  require("lazydev").setup()
+  lazydev.setup()
   vim.lsp.config("lua_ls", {
     cmd = { "lua-language-server" },
     root_markers = {
@@ -796,17 +541,6 @@ end)
 
 --- Python support
 local python = coroutine.create(function()
-  if not NPM then
-    return
-  end
-  if not misc.is_npm_package_installed("pyright") then
-    local output = vim.fn.system("npm -g install pyright")
-    if vim.v.shell_error == 0 then
-      vim.notify("pyright installed")
-    else
-      vim.notify("Error installing pyright: " .. output)
-    end
-  end
   vim.lsp.config("pyright", {
     cmd = { "pyright-langserver", "--stdio" },
     filetypes = { "python" },
@@ -816,17 +550,6 @@ end)
 
 --- Bash support
 local bash = coroutine.create(function()
-  if not NPM then
-    return
-  end
-  if not misc.is_npm_package_installed("bash-language-server") then
-    local output = vim.fn.system("npm -g install bash-language-server")
-    if vim.v.shell_error == 0 then
-      vim.notify("bash-language-server installed")
-    else
-      vim.notify("Error installing bash-language-server: " .. output)
-    end
-  end
   vim.lsp.config("bashls", {
     cmd = { "bash-language-server", "start" },
     settings = {
@@ -842,33 +565,6 @@ end)
 
 --- JavaScript support
 local javascript = coroutine.create(function()
-  if not NPM then
-    return
-  end
-  if not misc.is_npm_package_installed("typescript") then
-    local output = vim.fn.system("npm -g install typescript")
-    if vim.v.shell_error == 0 then
-      vim.notify("typescript installed")
-    else
-      vim.notify("Error installing typescript: " .. output)
-    end
-  end
-  if not misc.is_npm_package_installed("@vue/typescript-plugin") then
-    local output = vim.fn.system("npm -g install @vue/typescript-plugin")
-    if vim.v.shell_error == 0 then
-      vim.notify("@vue/typescript-plugin installed")
-    else
-      vim.notify("Error installing @vue/typescript-plugin: " .. output)
-    end
-  end
-  if not misc.is_npm_package_installed("typescript-language-server") then
-    local output = vim.fn.system("npm -g install typescript-language-server")
-    if vim.v.shell_error == 0 then
-      vim.notify("typescript-language-server installed")
-    else
-      vim.notify("Error installing typescript-language-server: " .. output)
-    end
-  end
   vim.lsp.config("ts_ls", {
     cmd = { "typescript-language-server", "--stdio" },
     filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact" },
@@ -877,34 +573,11 @@ local javascript = coroutine.create(function()
 end)
 
 --- Vue.js support
-local vue = coroutine.create(function()
-  if not NPM then
-    return
-  end
-  if not misc.is_npm_package_installed("@vue/language-server") then
-    local output = vim.fn.system("npm -g install @vue/language-server@2.2.8")
-    if vim.v.shell_error == 0 then
-      vim.notify("@vue/language-server@2.2.8 installed")
-    else
-      vim.notify("Error installing @vue/language-server@2.2.8: " .. output)
-    end
-  end
-  if not misc.is_npm_package_installed("@vue/typescript-plugin") then
-    local output = vim.fn.system("npm -g install @vue/typescript-plugin")
-    if vim.v.shell_error == 0 then
-      vim.notify("@vue/typescript-plugin installed")
-    else
-      vim.notify("Error installing @vue/typescript-plugin: " .. output)
-    end
-  end
-end)
-
--- Minimal Volar setup with multi-buffer diagnostics and auto-refresh
 vim.api.nvim_create_autocmd("FileType", {
   pattern = "vue",
   callback = function()
     local function get_root_dir()
-      local path = vim.fn.expand("%:p") -- current buffer
+      local path = vim.fn.expand("%:p")
       local markers = { "package.json", ".git" }
       for _, m in ipairs(markers) do
         local found = vim.fn.findfile(m, path .. ";")
@@ -956,7 +629,6 @@ vim.api.nvim_create_autocmd("FileType", {
       local clients = vim.lsp.get_clients({ bufnr = bufnr })
       for _, c in ipairs(clients) do
         if c.name == "volar" then
-          -- Only send request if client supports diagnostics
           if c.supports_method("textDocument/diagnostic") then
             vim.lsp.buf_request(
               bufnr,
@@ -979,29 +651,11 @@ vim.api.nvim_create_autocmd("FileType", {
 
 -- Markdown support
 local markdown = coroutine.create(function()
-  if not GITHUB then
+  local render_markdown = packager.try_require("render-markdown")
+  if not render_markdown then
     return
   end
-  local install_path = vim.fn.stdpath("data") .. "/site/pack/packages/opt/render-markdown"
-  if vim.fn.empty(vim.fn.glob(install_path)) > 0 then
-    vim.notify("Installing MeanderingProgrammer/render-markdown.nvim...", vim.log.levels.INFO)
-    local output = vim.fn.system({
-      "git",
-      "clone",
-      "--depth",
-      "1",
-      "https://github.com/MeanderingProgrammer/render-markdown.nvim",
-      install_path,
-    })
-    if vim.v.shell_error == 0 then
-      vim.notify("render-markdown installed")
-    else
-      vim.notify("Error installing render-markdown: " .. output)
-    end
-  end
-  vim.cmd("packadd render-markdown")
-  vim.cmd("packloadall")
-  require("render-markdown").setup({
+  render_markdown.setup({
     completions = {
       lsp = {
         enabled = true,
@@ -1064,9 +718,6 @@ vim.defer_fn(function()
   coroutine.resume(zen_mode)
 end, 7000)
 vim.defer_fn(function()
-  coroutine.resume(number_toggle)
-end, 7200)
-vim.defer_fn(function()
   coroutine.resume(lua)
 end, 7400)
 vim.defer_fn(function()
@@ -1078,9 +729,6 @@ end, 7800)
 vim.defer_fn(function()
   coroutine.resume(javascript)
 end, 8000)
-vim.defer_fn(function()
-  coroutine.resume(vue)
-end, 8020)
 vim.defer_fn(function()
   coroutine.resume(markdown)
 end, 8040)
