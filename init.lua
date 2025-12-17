@@ -1,3 +1,5 @@
+---@diagnostic disable: need-check-nil
+---@diagnostic disable: undefined-field
 local misc = require("misc")
 local packager = require("packager")
 
@@ -58,57 +60,35 @@ vim.api.nvim_create_autocmd("TextYankPost", {
   end,
 })
 
---- Packages
-local first_packages_co = coroutine.create(function()
-  misc.promise_all({
-    --- Theme
-    packager.install_package("tokyonight", "folke/tokyonight.nvim"),
-    --- Icons for file manager
-    packager.install_package("nvim-web-devicons", "nvim-tree/nvim-web-devicons"),
-    --- File manager
-    packager.install_package("nvim-tree", "nvim-tree/nvim-tree.lua"),
-    --- Collection of small packages
-    packager.install_package("mini.nvim", "nvim-mini/mini.nvim"),
-  })
-end)
-local second_packages_co = coroutine.create(function()
-  misc.promise_all({
-    --- Git icons in sign column
-    packager.install_package("gitsigns", "lewis6991/gitsigns.nvim"),
-    --- Breadcrumbs
-    packager.install_package("dropbar", "Bekaboo/dropbar.nvim"),
-    --- Tabs
-    packager.install_package("bufferline", "akinsho/bufferline.nvim"),
-    --- Auto-complete
-    packager.install_package("conform", "stevearc/conform.nvim"),
-    --- Formatting for JavaScript
-    packager.install_npm("prettier"),
-    --- Scrollbar
-    packager.install_package("nvim-scrollbar", "petertriho/nvim-scrollbar"),
-    --- Indenting
-    packager.install_package("guess-indent", "NMAC427/guess-indent.nvim"),
-    --- Zen mode
-    packager.install_package("zen-mode", "folke/zen-mode.nvim"),
-    --- Relative number on in normal mode, off in insert mode
-    packager.install_package("nvim-numbertoggle", "sitiom/nvim-numbertoggle"),
-    --- NeoVim API support in lua
-    packager.install_package("lazydev", "folke/lazydev.nvim"),
-    --- Pyton language server
-    packager.install_npm("pyright"),
-    --- Bash language server
-    packager.install_npm("bash-language-server"),
-    --- TypeScript SDK
-    packager.install_npm("typescript"),
-    --- TypeScript language server
-    packager.install_npm("typescript-language-server"),
-    --- Vue.js language server
-    packager.install_npm("@vue/language-server"),
-    --- Vue.js plugin for TypeScript language server
-    packager.install_npm("@vue/typescript-plugin"),
-    --- Render Markdown files in the editor
-    packager.install_package("render-markdown", "MeanderingProgrammer/render-markdown.nvim"),
-  })
-end)
+--- Highlight TODOs
+vim.api.nvim_set_hl(0, "TodoHighlight", { link = "Todo" })
+vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
+  callback = function()
+    vim.fn.matchadd("TodoHighlight", [[\<TODO\>]])
+    vim.api.nvim_set_hl(0, "TodoHighlight", { link = "Todo" })
+  end,
+})
+vim.api.nvim_exec_autocmds("BufEnter", { buffer = 0 })
+
+--- LSP configuration
+vim.api.nvim_create_autocmd("LspAttach", {
+  callback = function(event)
+    -- Goto definition
+    vim.keymap.set("n", "gd", vim.lsp.buf.implementation, { buffer = event.buf })
+    -- Enable virtual text
+    vim.diagnostic.config({
+      virtual_text = {
+        source = false,
+      },
+      severity_sort = true,
+      float = { border = "rounded", source = "if_many" },
+      underline = { severity = vim.diagnostic.severity.ERROR },
+    })
+    -- Enable autocompletion while typing
+    vim.o.completeopt = "menu,menuone,noinsert,noselect"
+    vim.lsp.completion.enable(true, event.data.client_id, event.buf, { autotrigger = true })
+  end,
+})
 
 --- Theme
 local function load_theme()
@@ -231,381 +211,377 @@ local function load_picker()
   end
 end
 
-local first_loads_co = coroutine.create(function()
-  misc.promise_all({
-    --- Theme
-    load_theme(),
-    --- Icons for file manager
-    load_icons(),
-    --- File manager
-    load_file_manager(),
-    --- Collection of small packages
-    load_picker,
-  })
-end)
-misc.run_coroutine(first_packages_co)
-misc.run_coroutine(first_loads_co)
-vim.defer_fn(function()
-  misc.run_coroutine(second_packages_co)
-end, 1000)
-
 --- Status line
-local status_line = coroutine.create(function()
-  local statusline = packager.try_require("mini.statusline")
-  if not statusline then
-    return false
+local function load_status_line()
+  return function(cb)
+    local statusline = packager.try_require("mini.statusline")
+    if not statusline then
+      cb(false, nil)
+    end
+    statusline.setup({
+      use_icons = nerd_font,
+    })
+    cb(true, nil)
   end
-  statusline.setup({
-    use_icons = nerd_font,
-  })
-end)
-
---- Highlight TODOs
-local highlight_todo = coroutine.create(function()
-  vim.api.nvim_set_hl(0, "TodoHighlight", { link = "Todo" })
-  vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
-    callback = function()
-      vim.fn.matchadd("TodoHighlight", [[\<TODO\>]])
-      vim.api.nvim_set_hl(0, "TodoHighlight", { link = "Todo" })
-    end,
-  })
-  vim.api.nvim_exec_autocmds("BufEnter", { buffer = 0 })
-end)
+end
 
 --- Git signs
-local gitsigns = coroutine.create(function()
-  local git_signs = packager.try_require("gitsigns")
-  if not git_signs then
-    return false
+local function load_gitsigns()
+  return function(cb)
+    local git_signs = packager.try_require("gitsigns")
+    if not git_signs then
+      cb(false, nil)
+    end
+    git_signs.setup({
+      signs = {
+        add = { text = "|" },
+        change = { text = "|" },
+        delete = { text = "_" },
+        topdelete = { text = "_" },
+        changedelete = { text = "~" },
+        untracked = { text = " " },
+      },
+      signs_staged = {
+        add = { text = "|" },
+        change = { text = "|" },
+        delete = { text = "_" },
+        topdelete = { text = "_" },
+        changedelete = { text = "~" },
+        untracked = { text = " " },
+      },
+    })
+    cb(true, nil)
   end
-  git_signs.setup({
-    signs = {
-      add = { text = "|" },
-      change = { text = "|" },
-      delete = { text = "_" },
-      topdelete = { text = "_" },
-      changedelete = { text = "~" },
-      untracked = { text = " " },
-    },
-    signs_staged = {
-      add = { text = "|" },
-      change = { text = "|" },
-      delete = { text = "_" },
-      topdelete = { text = "_" },
-      changedelete = { text = "~" },
-      untracked = { text = " " },
-    },
-  })
-end)
+end
 
 --- Breadcrumbs
-local breadcrumbs = coroutine.create(function()
-  local dropbar = packager.try_require("dropbar")
-  if not dropbar then
-    return false
+local function load_breadcrumbs()
+  return function(cb)
+    local dropbar = packager.try_require("dropbar")
+    if not dropbar then
+      cb(false, nil)
+    end
+    dropbar.setup({
+      icons = nerd_font and {} or {
+        kinds = {
+          symbols = {
+            Array = "(arr)",
+            BlockMappingPair = "(blkmappair)",
+            Boolean = "(bool)",
+            BreakStatement = "(brk)",
+            Call = "(call)",
+            CaseStatement = "(case)",
+            Class = "(cls)",
+            Constant = "(const)",
+            Constructor = "(constr)",
+            ContinueStatment = "(cont)",
+            Copilot = "(copilot)",
+            Declaration = "(decl)",
+            Delete = "(del)",
+            DoStatement = "(do)",
+            Element = "(elem)",
+            Enum = "(enum)",
+            EnumMember = "(emumMem)",
+            Event = "(evt)",
+            Field = "(fld)",
+            File = "(f)",
+            Folder = "(d)",
+            ForStatement = "(for)",
+            Function = "(fn)",
+            GotoStatement = "(goto)",
+            Identifier = "(ident)",
+            IfStatement = "(if)",
+            Interface = "(intf)",
+            Keyword = "(kwd)",
+            List = "(list)",
+            Log = "(log)",
+            Lsp = "(lsp)",
+            Macro = "(mac)",
+            MarkdownH1 = "(h1)",
+            MarkdownH2 = "(h2)",
+            MarkdownH3 = "(h3)",
+            MarkdownH4 = "(h4)",
+            MarkdownH5 = "(h5)",
+            MarkdownH6 = "(h6)",
+            Method = "(mth)",
+            Module = "(mod)",
+            Namespace = "(ns)",
+            Null = "(nul)",
+            Number = "(num)",
+            Object = "(obj)",
+            Operator = "(oper)",
+            Package = "(pkg)",
+            Pair = "(pair)",
+            Property = "(prop)",
+            Reference = "(ref)",
+            Regex = "(regex)",
+            Repeat = "(rep)",
+            Return = "(ret)",
+            Rule = "(rule)",
+            RuleSet = "(ruleset)",
+            Scope = "(scope)",
+            Section = "(sec)",
+            Snippet = "(snip)",
+            Specifier = "(spec)",
+            Statement = "(stmt)",
+            String = "(str)",
+            Struct = "(struct)",
+            SwitchStatement = "(swit)",
+            Table = "(tbl)",
+            Terminal = "(term)",
+            Text = "(txt)",
+            Type = "(type)",
+            TypeParameter = "(typepar)",
+            Unit = "(unit)",
+            Value = "(val)",
+            Variable = "(var)",
+            WhileStatement = "(whl)",
+          },
+        },
+        ui = {
+          bar = {
+            separator = "> ",
+            extends = "...",
+          },
+          menu = {
+            separator = " ",
+            indicator = "> ",
+          },
+        },
+      },
+    })
+    cb(true, nil)
   end
-  dropbar.setup({
-    icons = nerd_font and {} or {
-      kinds = {
-        symbols = {
-          Array = "(arr)",
-          BlockMappingPair = "(blkmappair)",
-          Boolean = "(bool)",
-          BreakStatement = "(brk)",
-          Call = "(call)",
-          CaseStatement = "(case)",
-          Class = "(cls)",
-          Constant = "(const)",
-          Constructor = "(constr)",
-          ContinueStatment = "(cont)",
-          Copilot = "(copilot)",
-          Declaration = "(decl)",
-          Delete = "(del)",
-          DoStatement = "(do)",
-          Element = "(elem)",
-          Enum = "(enum)",
-          EnumMember = "(emumMem)",
-          Event = "(evt)",
-          Field = "(fld)",
-          File = "(f)",
-          Folder = "(d)",
-          ForStatement = "(for)",
-          Function = "(fn)",
-          GotoStatement = "(goto)",
-          Identifier = "(ident)",
-          IfStatement = "(if)",
-          Interface = "(intf)",
-          Keyword = "(kwd)",
-          List = "(list)",
-          Log = "(log)",
-          Lsp = "(lsp)",
-          Macro = "(mac)",
-          MarkdownH1 = "(h1)",
-          MarkdownH2 = "(h2)",
-          MarkdownH3 = "(h3)",
-          MarkdownH4 = "(h4)",
-          MarkdownH5 = "(h5)",
-          MarkdownH6 = "(h6)",
-          Method = "(mth)",
-          Module = "(mod)",
-          Namespace = "(ns)",
-          Null = "(nul)",
-          Number = "(num)",
-          Object = "(obj)",
-          Operator = "(oper)",
-          Package = "(pkg)",
-          Pair = "(pair)",
-          Property = "(prop)",
-          Reference = "(ref)",
-          Regex = "(regex)",
-          Repeat = "(rep)",
-          Return = "(ret)",
-          Rule = "(rule)",
-          RuleSet = "(ruleset)",
-          Scope = "(scope)",
-          Section = "(sec)",
-          Snippet = "(snip)",
-          Specifier = "(spec)",
-          Statement = "(stmt)",
-          String = "(str)",
-          Struct = "(struct)",
-          SwitchStatement = "(swit)",
-          Table = "(tbl)",
-          Terminal = "(term)",
-          Text = "(txt)",
-          Type = "(type)",
-          TypeParameter = "(typepar)",
-          Unit = "(unit)",
-          Value = "(val)",
-          Variable = "(var)",
-          WhileStatement = "(whl)",
-        },
-      },
-      ui = {
-        bar = {
-          separator = "> ",
-          extends = "...",
-        },
-        menu = {
-          separator = " ",
-          indicator = "> ",
-        },
-      },
-    },
-  })
-end)
+end
 
 --- Tabs
-local tabs = coroutine.create(function()
-  local bufferline = packager.try_require("bufferline")
-  if not bufferline then
-    return false
+local function load_tabs()
+  return function(cb)
+    local bufferline = packager.try_require("bufferline")
+    if not bufferline then
+      cb(false, nil)
+    end
+    bufferline.setup({
+      options = {
+        nubmers = "ordinal",
+        separator_style = "slant",
+        buffer_close_icon = nerd_font and "" or "x",
+        close_icon = nerd_font and "" or "x",
+        modified_icon = nerd_font and "" or "m",
+        left_trunc_marker = nerd_font and "" or "/",
+        right_trunc_marker = nerd_font and "" or "\\",
+      },
+    })
+    -- Go to buffer number with <Space> b <buffer_number><Enter>
+    vim.keymap.set("n", "<leader>b", ":BufferLineGoToBuffer ", { desc = "Open [B]uffer (tab) number", noremap = true })
+    -- Go to next buffer with <Space> <Tab>
+    vim.keymap.set("n", "<leader><Tab>", ":BufferLineCycleNext<CR>", { desc = "Cycle next tab", noremap = true })
+    -- Go to previous buffer with <Space> <Shift-Tab>
+    vim.keymap.set(
+      "n",
+      "<leader><Shift-Tab>",
+      ":BufferLineCyclePrev<CR>",
+      { desc = "Cycle previous tab", noremap = true }
+    )
+    -- Close current buffer with :bd
+    cb(true, nil)
   end
-  bufferline.setup({
-    options = {
-      nubmers = "ordinal",
-      separator_style = "slant",
-      buffer_close_icon = nerd_font and "" or "x",
-      close_icon = nerd_font and "" or "x",
-      modified_icon = nerd_font and "" or "m",
-      left_trunc_marker = nerd_font and "" or "/",
-      right_trunc_marker = nerd_font and "" or "\\",
-    },
-  })
-  -- Go to buffer number with <Space> b <buffer_number><Enter>
-  vim.keymap.set("n", "<leader>b", ":BufferLineGoToBuffer ", { desc = "Open [B]uffer (tab) number", noremap = true })
-  -- Go to next buffer with <Space> <Tab>
-  vim.keymap.set("n", "<leader><Tab>", ":BufferLineCycleNext<CR>", { desc = "Cycle next tab", noremap = true })
-  -- Go to previous buffer with <Space> <Shift-Tab>
-  vim.keymap.set(
-    "n",
-    "<leader><Shift-Tab>",
-    ":BufferLineCyclePrev<CR>",
-    { desc = "Cycle previous tab", noremap = true }
-  )
-  -- Close current buffer with :bd
-end)
+end
 
 --- Formatting
-local formatting = coroutine.create(function()
-  local conform = packager.try_require("conform")
-  if not conform then
-    return false
+local function load_formatting()
+  return function(cb)
+    local conform = packager.try_require("conform")
+    if not conform then
+      cb(false, nil)
+    end
+    conform.setup({
+      formatters_by_ft = {
+        lua = { "stylua" },
+        python = { "isort", "black" },
+        javascript = { "prettier" },
+        vue = { "prettier" },
+      },
+      format_on_save = {
+        timeout_ms = 1000,
+        lsp_format = "fallback",
+      },
+    })
+    cb(true, nil)
   end
-  conform.setup({
-    formatters_by_ft = {
-      lua = { "stylua" },
-      python = { "isort", "black" },
-      javascript = { "prettier" },
-      vue = { "prettier" },
-    },
-    format_on_save = {
-      timeout_ms = 1000,
-      lsp_format = "fallback",
-    },
-  })
-end)
-
---- LSP configuration
-local lsp_config = coroutine.create(function()
-  vim.api.nvim_create_autocmd("LspAttach", {
-    callback = function(event)
-      -- Goto definition
-      vim.keymap.set("n", "gd", vim.lsp.buf.implementation, { buffer = event.buf })
-      -- Enable virtual text
-      vim.diagnostic.config({
-        virtual_text = {
-          source = false,
-        },
-        severity_sort = true,
-        float = { border = "rounded", source = "if_many" },
-        underline = { severity = vim.diagnostic.severity.ERROR },
-      })
-      -- Enable autocompletion while typing
-      vim.o.completeopt = "menu,menuone,noinsert,noselect"
-      vim.lsp.completion.enable(true, event.data.client_id, event.buf, { autotrigger = true })
-    end,
-  })
-end)
+end
 
 --- Auto pairs
-local auto_pairs = coroutine.create(function()
-  local mini_pairs = packager.try_require("mini.pairs")
-  if not mini_pairs then
-    return false
+local function load_auto_pairs()
+  return function(cb)
+    local mini_pairs = packager.try_require("mini.pairs")
+    if not mini_pairs then
+      cb(false, nil)
+    end
+    mini_pairs.setup()
+    cb(true, nil)
   end
-  mini_pairs.setup()
-end)
+end
 
 --- Scrollbar
-local scrollbar = coroutine.create(function()
-  local scroll_bar = packager.try_require("scrollbar")
-  if not scroll_bar then
-    return false
+local function load_scrollbar()
+  return function(cb)
+    local scroll_bar = packager.try_require("scrollbar")
+    if not scroll_bar then
+      cb(false, nil)
+    end
+    scroll_bar.setup({
+      handlers = {
+        gitsigns = true,
+      },
+      marks = nerd_font and {} or {
+        Cursor = {
+          text = "*",
+        },
+        Search = {
+          text = { "-", "=" },
+        },
+        Error = {
+          text = { "-", "=" },
+        },
+        Warn = {
+          text = { "-", "=" },
+        },
+        Info = {
+          text = { "-", "=" },
+        },
+        Hint = {
+          text = { "-", "=" },
+        },
+        Misc = {
+          text = { "-", "=" },
+        },
+        GitAdd = {
+          text = "|",
+        },
+        GitChange = {
+          text = "|",
+        },
+        GitDelete = {
+          text = "_",
+        },
+      },
+    })
+    cb(true, nil)
   end
-  scroll_bar.setup({
-    handlers = {
-      gitsigns = true,
-    },
-    marks = nerd_font and {} or {
-      Cursor = {
-        text = "*",
-      },
-      Search = {
-        text = { "-", "=" },
-      },
-      Error = {
-        text = { "-", "=" },
-      },
-      Warn = {
-        text = { "-", "=" },
-      },
-      Info = {
-        text = { "-", "=" },
-      },
-      Hint = {
-        text = { "-", "=" },
-      },
-      Misc = {
-        text = { "-", "=" },
-      },
-      GitAdd = {
-        text = "|",
-      },
-      GitChange = {
-        text = "|",
-      },
-      GitDelete = {
-        text = "_",
-      },
-    },
-  })
-end)
+end
 
 --- Automatic indenting
-local indent = coroutine.create(function()
-  local guess_indent = packager.try_require("guess-indent")
-  if not guess_indent then
-    return false
+local function load_indent()
+  return function(cb)
+    local guess_indent = packager.try_require("guess-indent")
+    if not guess_indent then
+      cb(false, nil)
+    end
+    guess_indent.setup({})
+    vim.api.nvim_exec_autocmds("BufReadPost", { buffer = 0 })
+    cb(true, nil)
   end
-  guess_indent.setup({})
-  vim.api.nvim_exec_autocmds("BufReadPost", { buffer = 0 })
-end)
+end
 
 --- Zen mode
-local zen_mode = coroutine.create(function()
-  local zenmode = packager.try_require("zen-mode")
-  if not zenmode then
-    return false
+local function load_zen_mode()
+  return function(cb)
+    local zenmode = packager.try_require("zen-mode")
+    if not zenmode then
+      cb(false, nil)
+    end
+    zenmode.setup({
+      window = {
+        width = 0.95,
+      },
+    })
+    vim.keymap.set("n", "<leader>z", ":ZenMode<cr>", { noremap = true })
+    return cb(true, nil)
   end
-  zenmode.setup({
-    window = {
-      width = 0.95,
-    },
-  })
-  vim.keymap.set("n", "<leader>z", ":ZenMode<cr>", { noremap = true })
-end)
+end
 
 --- Lua support
-local lua = coroutine.create(function()
-  local lazydev = packager.try_require("lazydev")
-  if not lazydev then
-    return false
-  end
-  lazydev.setup()
-  vim.lsp.config("lua_ls", {
-    cmd = { "lua-language-server" },
-    root_markers = {
-      ".luarc.json",
-      ".luarc.jsonc",
-      ".luacheckrc",
-      ".stylua.toml",
-      "stylua.toml",
-      "selene.toml",
-      "selene.yml",
-      ".git",
-    },
-    filetypes = { "lua" },
-  })
-  vim.lsp.enable("lua_ls")
-end)
+vim.api.nvim_create_autocmd("BufEnter", {
+  pattern = "*.lua",
+  callback = function()
+    local lazydev = packager.try_require("lazydev")
+    if not lazydev then
+      return false
+    end
+    lazydev.setup()
+    vim.lsp.config("lua_ls", {
+      cmd = { "lua-language-server" },
+      root_markers = {
+        ".luarc.json",
+        ".luarc.jsonc",
+        ".luacheckrc",
+        ".stylua.toml",
+        "stylua.toml",
+        "selene.toml",
+        "selene.yml",
+        ".git",
+      },
+      filetypes = { "lua" },
+      settings = {
+        Lua = {
+          codeLens = {
+            enable = true,
+          },
+          hint = {
+            enable = true,
+            semicolon = "Disable",
+          },
+        },
+      },
+    })
+    vim.lsp.enable("lua_ls")
+  end,
+})
 
 --- Python support
-local python = coroutine.create(function()
-  vim.lsp.config("pyright", {
-    cmd = { "pyright-langserver", "--stdio" },
-    filetypes = { "python" },
-  })
-  vim.lsp.enable("pyright")
-end)
+vim.api.nvim_create_autocmd("BufEnter", {
+  pattern = "*.py",
+  callback = function()
+    vim.lsp.config("pyright", {
+      cmd = { "pyright-langserver", "--stdio" },
+      filetypes = { "python" },
+    })
+    vim.lsp.enable("pyright")
+  end,
+})
 
---- Bash support
-local bash = coroutine.create(function()
-  vim.lsp.config("bashls", {
-    cmd = { "bash-language-server", "start" },
-    settings = {
-      bashIde = {
-        globPattern = vim.env.GLOB_PATTERN or "*@(.sh|.inc|.bash|.command)",
+vim.api.nvim_create_autocmd("BufEnter", {
+  pattern = { "*.sh", "*.bash" },
+  callback = function()
+    vim.lsp.config("bashls", {
+      cmd = { "bash-language-server", "start" },
+      settings = {
+        bashIde = {
+          globPattern = vim.env.GLOB_PATTERN or "*@(.sh|.inc|.bash|.command)",
+        },
       },
-    },
-    filetypes = { "bash", "sh" },
-    root_markers = { ".git" },
-  })
-  vim.lsp.enable("bashls")
-end)
+      filetypes = { "bash", "sh" },
+      root_markers = { ".git" },
+    })
+    vim.lsp.enable("bashls")
+  end,
+})
 
---- JavaScript support
-local javascript = coroutine.create(function()
-  vim.lsp.config("ts_ls", {
-    cmd = { "typescript-language-server", "--stdio" },
-    filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact" },
-  })
-  vim.lsp.enable("ts_ls")
-end)
+vim.api.nvim_create_autocmd("BufEnter", {
+  pattern = { "*.ts", "*.js", "*.mjs" },
+  callback = function()
+    vim.lsp.config("ts_ls", {
+      cmd = { "typescript-language-server", "--stdio" },
+      filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact" },
+    })
+    vim.lsp.enable("ts_ls")
+  end,
+})
 
 --- Vue.js support
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = "vue",
+vim.api.nvim_create_autocmd("BufEnter", {
+  pattern = "*.vue",
   callback = function()
     local function get_root_dir()
       local path = vim.fn.expand("%:p")
@@ -680,74 +656,136 @@ vim.api.nvim_create_autocmd("FileType", {
   end,
 })
 
--- Markdown support
-local markdown = coroutine.create(function()
-  local render_markdown = packager.try_require("render-markdown")
-  if not render_markdown then
-    return
-  end
-  render_markdown.setup({
-    completions = {
-      lsp = {
-        enabled = true,
+vim.api.nvim_create_autocmd("BufEnter", {
+  pattern = "*.md",
+  callback = function()
+    local render_markdown = packager.try_require("render-markdown")
+    if not render_markdown then
+      return
+    end
+    render_markdown.setup({
+      completions = {
+        lsp = {
+          enabled = true,
+        },
       },
-    },
+    })
+    vim.api.nvim_create_autocmd("BufEnter", {
+      pattern = "*.md",
+      callback = function(opts)
+        if vim.bo[opts.buf].filetype == "markdown" then
+          vim.cmd("RenderMarkdown enable")
+        end
+      end,
+    })
+  end,
+})
+
+vim.api.nvim_create_autocmd("BufEnter", {
+  pattern = { "*.json", "*.jsonc" },
+  callback = function()
+    local capabilities = vim.lsp.protocol.make_client_capabilities()
+    capabilities.textDocument.completion.completionItem.snippetSupport = true
+    vim.lsp.config("jsonls", {
+      cmd = { "vscode-json-language-server", "--stdio" },
+      filetypes = { "json", "jsonc" },
+      init_options = {
+        provideFormatter = true,
+      },
+      root_markers = { ".git" },
+      capabilities = capabilities,
+    })
+    vim.lsp.enable("jsonls")
+  end,
+})
+
+--- Install essential packages to be loaded immediately
+local first_packages_co = coroutine.create(function()
+  misc.promise_all({
+    --- Theme
+    packager.install_package("tokyonight", "folke/tokyonight.nvim"),
+    --- Icons for file manager
+    packager.install_package("nvim-web-devicons", "nvim-tree/nvim-web-devicons"),
+    --- File manager
+    packager.install_package("nvim-tree", "nvim-tree/nvim-tree.lua"),
+    --- Collection of small packages
+    packager.install_package("mini.nvim", "nvim-mini/mini.nvim"),
   })
-  vim.api.nvim_create_autocmd("FileType", {
-    pattern = "markdown",
-    callback = function(opts)
-      if vim.bo[opts.buf].filetype == "markdown" then
-        vim.cmd("RenderMarkdown enable")
-      end
-    end,
+end)
+misc.run_coroutine(first_packages_co)
+
+--- Load first set of coroutines for essential packages
+local first_loads_co = coroutine.create(function()
+  misc.promise_all({
+    --- Theme
+    load_theme(),
+    --- Icons for file manager
+    load_icons(),
+    --- File manager
+    load_file_manager(),
+    --- Collection of small packages
+    load_picker,
+  })
+end)
+misc.run_coroutine(first_loads_co)
+
+--- Install remainig packages
+local second_packages_co = coroutine.create(function()
+  misc.promise_all({
+    --- Git icons in sign column
+    packager.install_package("gitsigns", "lewis6991/gitsigns.nvim"),
+    --- Breadcrumbs
+    packager.install_package("dropbar", "Bekaboo/dropbar.nvim"),
+    --- Tabs
+    packager.install_package("bufferline", "akinsho/bufferline.nvim"),
+    --- Auto-complete
+    packager.install_package("conform", "stevearc/conform.nvim"),
+    --- Formatting for JavaScript
+    packager.install_npm("prettier"),
+    --- Scrollbar
+    packager.install_package("nvim-scrollbar", "petertriho/nvim-scrollbar"),
+    --- Indenting
+    packager.install_package("guess-indent", "NMAC427/guess-indent.nvim"),
+    --- Zen mode
+    packager.install_package("zen-mode", "folke/zen-mode.nvim"),
+    --- Relative number on in normal mode, off in insert mode
+    packager.install_package("nvim-numbertoggle", "sitiom/nvim-numbertoggle"),
+    --- NeoVim API support in lua
+    packager.install_package("lazydev", "folke/lazydev.nvim"),
+    --- Pyton language server
+    packager.install_npm("pyright"),
+    --- Bash language server
+    packager.install_npm("bash-language-server"),
+    --- TypeScript SDK
+    packager.install_npm("typescript"),
+    --- TypeScript language server
+    packager.install_npm("typescript-language-server"),
+    --- Vue.js language server
+    packager.install_npm("@vue/language-server"),
+    --- Vue.js plugin for TypeScript language server
+    packager.install_npm("@vue/typescript-plugin"),
+    --- Render Markdown files in the editor
+    packager.install_package("render-markdown", "MeanderingProgrammer/render-markdown.nvim"),
+    --- JSON language server
+    packager.install_npm("vscode-langservers-extracted"),
   })
 end)
 
+--- Load remaining packages
+local second_loads_co = coroutine.create(function()
+  misc.promise_all({
+    load_status_line(),
+    load_gitsigns(),
+    load_breadcrumbs(),
+    load_tabs(),
+    load_formatting(),
+    load_auto_pairs(),
+    load_scrollbar(),
+    load_indent(),
+    load_zen_mode(),
+  })
+end)
 vim.defer_fn(function()
-  coroutine.resume(status_line)
-end, 5200)
-vim.defer_fn(function()
-  coroutine.resume(highlight_todo)
-end, 5400)
-vim.defer_fn(function()
-  coroutine.resume(gitsigns)
-end, 5600)
-vim.defer_fn(function()
-  coroutine.resume(breadcrumbs)
-end, 5800)
-vim.defer_fn(function()
-  coroutine.resume(tabs)
-end, 5900)
-vim.defer_fn(function()
-  coroutine.resume(formatting)
-end, 6000)
-vim.defer_fn(function()
-  coroutine.resume(lsp_config)
-end, 6200)
-vim.defer_fn(function()
-  coroutine.resume(auto_pairs)
-end, 6400)
-vim.defer_fn(function()
-  coroutine.resume(scrollbar)
-end, 6600)
-vim.defer_fn(function()
-  coroutine.resume(indent)
-end, 6800)
-vim.defer_fn(function()
-  coroutine.resume(zen_mode)
-end, 7000)
-vim.defer_fn(function()
-  coroutine.resume(lua)
-end, 7400)
-vim.defer_fn(function()
-  coroutine.resume(python)
-end, 7600)
-vim.defer_fn(function()
-  coroutine.resume(bash)
-end, 7800)
-vim.defer_fn(function()
-  coroutine.resume(javascript)
-end, 8000)
-vim.defer_fn(function()
-  coroutine.resume(markdown)
-end, 8040)
+  misc.run_coroutine(second_packages_co)
+  misc.run_coroutine(second_loads_co)
+end, 100)

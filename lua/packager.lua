@@ -57,7 +57,7 @@ function M.install_npm(name)
       if vim.v.shell_error ~= 0 then
         cb(false, nil)
       end
-      local output = vim.fn.system("npm -g install prettier")
+      local output = vim.fn.system("npm -g install " .. name)
       if vim.v.shell_error == 0 then
         vim.notify(name .. " installed", vim.log.levels.INFO)
         cb(true, nil)
