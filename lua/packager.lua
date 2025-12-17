@@ -11,6 +11,7 @@ function M.install_package(name, url)
       local _ = vim.fn.system("echo > /dev/tcp/github.com/443")
       if vim.v.shell_error ~= 0 then
         cb(false, nil)
+        return false
       end
       -- vim.notify("Installing " .. url .. " to " .. install_path .. "...", vim.log.levels.INFO)
       local full_url = "https://github.com/" .. url
@@ -28,14 +29,17 @@ function M.install_package(name, url)
       if vim.v.shell_error == 0 then
         vim.notify(name .. " installed", vim.log.levels.INFO)
         cb(true, nil)
+        return true
       else
         vim.notify("Error installing " .. name .. ": " .. output, vim.log.levels.INFO)
         cb(false, nil)
+        return false
       end
     end
     vim.cmd("packadd " .. name)
     vim.cmd("packloadall")
     cb(true, nil)
+    return true
   end
 end
 
@@ -56,17 +60,21 @@ function M.install_npm(name)
       local _ = vim.fn.system("echo > /dev/tcp/registry.npmjs.org/443")
       if vim.v.shell_error ~= 0 then
         cb(false, nil)
+        return false
       end
       local output = vim.fn.system("npm -g install " .. name)
       if vim.v.shell_error == 0 then
         vim.notify(name .. " installed", vim.log.levels.INFO)
         cb(true, nil)
+        return true
       else
         vim.notify("Error installing " .. name .. ": " .. output, vim.log.levels.INFO)
         cb(false, nil)
+        return false
       end
     end
     cb(true, nil)
+    return true
   end
 end
 

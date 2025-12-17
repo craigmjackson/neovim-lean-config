@@ -96,10 +96,12 @@ local function load_theme()
     local tokyonight = packager.try_require("tokyonight")
     if not tokyonight then
       cb(false, nil)
+      return false
     end
     tokyonight.setup()
     vim.cmd("colorscheme tokyonight")
     cb(true, nil)
+    return true
   end
 end
 
@@ -109,9 +111,11 @@ local function load_icons()
     local nvim_web_devicons = packager.try_require("nvim-web-devicons")
     if not nvim_web_devicons then
       cb(false, nil)
+      return false
     end
     require("nvim-web-devicons").setup()
     cb(true, nil)
+    return true
   end
 end
 
@@ -121,6 +125,7 @@ local function load_file_manager()
     local nvim_tree = packager.try_require("nvim-tree")
     if not nvim_tree then
       cb(false, nil)
+      return false
     end
     nvim_tree.setup({
       disable_netrw = true,
@@ -175,6 +180,7 @@ local function load_file_manager()
     })
     vim.keymap.set("n", "<c-n>", ":NvimTreeToggle<cr>", { noremap = true })
     cb(true, nil)
+    return true
   end
 end
 
@@ -184,6 +190,7 @@ local function load_picker()
     local minipick = packager.try_require("mini.pick")
     if not minipick then
       cb(false, nil)
+      return false
     end
     minipick.setup({
       source = {
@@ -208,6 +215,7 @@ local function load_picker()
     vim.keymap.set("n", "<leader>sg", ":Pick grep_live<cr>", { noremap = true })
     vim.keymap.set("n", "<leader>sn", pick_neovim_config, { noremap = true })
     cb(true, nil)
+    return true
   end
 end
 
@@ -217,11 +225,13 @@ local function load_status_line()
     local statusline = packager.try_require("mini.statusline")
     if not statusline then
       cb(false, nil)
+      return false
     end
     statusline.setup({
       use_icons = nerd_font,
     })
     cb(true, nil)
+    return true
   end
 end
 
@@ -231,6 +241,7 @@ local function load_gitsigns()
     local git_signs = packager.try_require("gitsigns")
     if not git_signs then
       cb(false, nil)
+      return false
     end
     git_signs.setup({
       signs = {
@@ -251,6 +262,7 @@ local function load_gitsigns()
       },
     })
     cb(true, nil)
+    return true
   end
 end
 
@@ -260,6 +272,7 @@ local function load_breadcrumbs()
     local dropbar = packager.try_require("dropbar")
     if not dropbar then
       cb(false, nil)
+      return false
     end
     dropbar.setup({
       icons = nerd_font and {} or {
@@ -351,6 +364,7 @@ local function load_breadcrumbs()
       },
     })
     cb(true, nil)
+    return true
   end
 end
 
@@ -360,6 +374,7 @@ local function load_tabs()
     local bufferline = packager.try_require("bufferline")
     if not bufferline then
       cb(false, nil)
+      return false
     end
     bufferline.setup({
       options = {
@@ -385,6 +400,7 @@ local function load_tabs()
     )
     -- Close current buffer with :bd
     cb(true, nil)
+    return true
   end
 end
 
@@ -394,6 +410,7 @@ local function load_formatting()
     local conform = packager.try_require("conform")
     if not conform then
       cb(false, nil)
+      return false
     end
     conform.setup({
       formatters_by_ft = {
@@ -408,6 +425,7 @@ local function load_formatting()
       },
     })
     cb(true, nil)
+    return true
   end
 end
 
@@ -417,9 +435,11 @@ local function load_auto_pairs()
     local mini_pairs = packager.try_require("mini.pairs")
     if not mini_pairs then
       cb(false, nil)
+      return true
     end
     mini_pairs.setup()
     cb(true, nil)
+    return true
   end
 end
 
@@ -429,6 +449,7 @@ local function load_scrollbar()
     local scroll_bar = packager.try_require("scrollbar")
     if not scroll_bar then
       cb(false, nil)
+      return false
     end
     scroll_bar.setup({
       handlers = {
@@ -468,6 +489,7 @@ local function load_scrollbar()
       },
     })
     cb(true, nil)
+    return true
   end
 end
 
@@ -477,10 +499,12 @@ local function load_indent()
     local guess_indent = packager.try_require("guess-indent")
     if not guess_indent then
       cb(false, nil)
+      return false
     end
     guess_indent.setup({})
     vim.api.nvim_exec_autocmds("BufReadPost", { buffer = 0 })
     cb(true, nil)
+    return true
   end
 end
 
@@ -490,6 +514,7 @@ local function load_zen_mode()
     local zenmode = packager.try_require("zen-mode")
     if not zenmode then
       cb(false, nil)
+      return false
     end
     zenmode.setup({
       window = {
@@ -497,7 +522,8 @@ local function load_zen_mode()
       },
     })
     vim.keymap.set("n", "<leader>z", ":ZenMode<cr>", { noremap = true })
-    return cb(true, nil)
+    cb(true, nil)
+    return true
   end
 end
 
@@ -699,7 +725,7 @@ vim.api.nvim_create_autocmd("BufEnter", {
   end,
 })
 
---- Install essential packages to be loaded immediately
+--- Install essential packages
 local first_packages_co = coroutine.create(function()
   misc.promise_all({
     --- Theme
@@ -712,9 +738,8 @@ local first_packages_co = coroutine.create(function()
     packager.install_package("mini.nvim", "nvim-mini/mini.nvim"),
   })
 end)
-misc.run_coroutine(first_packages_co)
 
---- Load first set of coroutines for essential packages
+--- Load first set of essential packages
 local first_loads_co = coroutine.create(function()
   misc.promise_all({
     --- Theme
@@ -723,11 +748,16 @@ local first_loads_co = coroutine.create(function()
     load_icons(),
     --- File manager
     load_file_manager(),
-    --- Collection of small packages
-    load_picker,
+    --- Picker
+    load_picker(),
   })
 end)
-misc.run_coroutine(first_loads_co)
+
+--- Execute the first packages and loads
+vim.defer_fn(function()
+  misc.run_coroutine(first_packages_co)
+  misc.run_coroutine(first_loads_co)
+end, 100)
 
 --- Install remainig packages
 local second_packages_co = coroutine.create(function()
@@ -785,7 +815,9 @@ local second_loads_co = coroutine.create(function()
     load_zen_mode(),
   })
 end)
+
+---  Execute the second packages and loads after 1 second
 vim.defer_fn(function()
   misc.run_coroutine(second_packages_co)
   misc.run_coroutine(second_loads_co)
-end, 100)
+end, 1000)
