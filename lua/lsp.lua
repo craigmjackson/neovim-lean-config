@@ -239,6 +239,45 @@ vim.api.nvim_create_autocmd("BufEnter", {
   end,
 })
 
+-- HTML support
+packager.install_npm("vscode-langservers-extracted")
+vim.api.nvim_create_autocmd("BufEnter", {
+  pattern = "*.html",
+  callback = function()
+    local capabilities = vim.lsp.protocol.make_client_capabilities()
+    capabilities.textDocument.completion.completionItem.snippetSupport = true
+    vim.lsp.config("html", {
+      capabilities = capabilities,
+      cmd = {
+        "vscode-html-language-server",
+        "--stdio",
+      },
+      filetypes = {
+        "html",
+        "templ",
+      },
+      init_options = {
+        configurationSection = {
+          "html",
+          "css",
+          "javascript",
+        },
+        embeddedLanguages = {
+          css = true,
+          javascript = true,
+        },
+        provideFormatter = true,
+      },
+      root_markers = {
+        "package.json",
+        ".git",
+      },
+      settings = {},
+    })
+    vim.lsp.enable("html")
+  end,
+})
+
 -- CSS support
 packager.install_npm("vscode-langservers-extracted")
 vim.api.nvim_create_autocmd("BufEnter", {
