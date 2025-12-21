@@ -356,3 +356,32 @@ vim.api.nvim_create_autocmd("BufEnter", {
     vim.lsp.enable("sqlls")
   end,
 })
+
+-- Yaml support
+packager.install_npm("yaml-language-server")
+vim.api.nvim_create_autocmd("BufEnter", {
+  pattern = { "*.yaml", "*.yml" },
+  callback = function()
+    vim.lsp.config("yamlls", {
+      cmd = { "yaml-language-server", "--stdio" },
+      filetypes = { "yaml" },
+      root_markers = { ".git" },
+      settings = {
+        redhat = {
+          telemetry = {
+            enabled = false,
+          },
+        },
+        yaml = {
+          format = {
+            enable = true,
+          },
+        },
+      },
+      on_init = function(client)
+        client.server_capabilities.documentFormattingProvider = true
+      end,
+    })
+    vim.lsp.enable("yamlls")
+  end,
+})
