@@ -192,8 +192,7 @@ vim.api.nvim_create_autocmd("BufEnter", {
   end,
 })
 
--- Markdown support
--- Install rendering markdown files in the editor
+-- Markdown rendering support
 packager.install_package("render-markdown", "MeanderingProgrammer/render-markdown.nvim")
 vim.api.nvim_create_autocmd("BufEnter", {
   pattern = "*.md",
@@ -221,7 +220,6 @@ vim.api.nvim_create_autocmd("BufEnter", {
 })
 
 -- JSON support
--- Install JSON language server
 packager.install_npm("vscode-langservers-extracted")
 vim.api.nvim_create_autocmd("BufEnter", {
   pattern = { "*.json", "*.jsonc" },
@@ -238,5 +236,43 @@ vim.api.nvim_create_autocmd("BufEnter", {
       capabilities = capabilities,
     })
     vim.lsp.enable("jsonls")
+  end,
+})
+
+-- CSS support
+packager.install_npm("vscode-langservers-extracted")
+vim.api.nvim_create_autocmd("BufEnter", {
+  pattern = { "*.css", "*.scss", "*.less" },
+  callback = function()
+    local capabilities = vim.lsp.protocol.make_client_capabilities()
+    capabilities.textDocument.completion.completionItem.snippetSupport = true
+    vim.lsp.config("cssls", {
+      capabilities = capabilities,
+      cmd = { "vscode-css-language-server", "--stdio" },
+      filetypes = {
+        "css",
+        "scss",
+        "less",
+      },
+      init_options = {
+        provideFormatter = true,
+      },
+      root_markers = {
+        "package.json",
+        ".git",
+      },
+      settings = {
+        css = {
+          validate = true,
+        },
+        scss = {
+          validate = true,
+        },
+        less = {
+          validate = true,
+        },
+      },
+    })
+    vim.lsp.enable("cssls")
   end,
 })
