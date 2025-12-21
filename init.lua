@@ -19,7 +19,7 @@ vim.defer_fn(function()
   require("filemanager")
   -- Load Picker
   require("picker")
-  -- Wait 1000ms then load the remaining plugins
+  -- Wait 500ms then load the remaining plugins
   vim.defer_fn(function()
     -- Load gitsigns
     require("git")
@@ -37,5 +37,5 @@ vim.defer_fn(function()
     require("autopairs")
     -- Load auto-indent
     require("indent")
-  end, 1000)
+  end, 500)
 end, 100)

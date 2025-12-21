@@ -23,10 +23,10 @@ vim.api.nvim_create_autocmd("LspAttach", {
 
 -- Lua support
 -- Install NeoVim API support in lua
-packager.install_package("lazydev", "folke/lazydev.nvim")
 vim.api.nvim_create_autocmd("BufEnter", {
   pattern = "*.lua",
   callback = function()
+    packager.install_package("lazydev", "folke/lazydev.nvim")
     local lazydev = packager.try_require("lazydev")
     if not lazydev then
       return false
@@ -89,10 +89,10 @@ vim.api.nvim_create_autocmd("BufEnter", {
 
 -- Python support
 -- Install Python language server
-packager.install_npm("pyright")
 vim.api.nvim_create_autocmd("BufEnter", {
   pattern = "*.py",
   callback = function()
+    packager.install_npm("pyright")
     vim.lsp.config("pyright", {
       cmd = { "pyright-langserver", "--stdio" },
       filetypes = { "python" },
@@ -103,10 +103,10 @@ vim.api.nvim_create_autocmd("BufEnter", {
 
 -- Bash support
 -- Install Bash language server
-packager.install_npm("bash-language-server")
 vim.api.nvim_create_autocmd("BufEnter", {
   pattern = { "*.sh", "*.bash" },
   callback = function()
+    packager.install_npm("bash-language-server")
     vim.lsp.config("bashls", {
       cmd = { "bash-language-server", "start" },
       settings = {
@@ -122,13 +122,11 @@ vim.api.nvim_create_autocmd("BufEnter", {
 })
 
 -- JavaScript support
--- Install TypeScript SDK
-packager.install_npm("typescript")
--- Install TypeScript language server
-packager.install_npm("typescript-language-server")
 vim.api.nvim_create_autocmd("BufEnter", {
   pattern = { "*.ts", "*.js", "*.mjs" },
   callback = function()
+    packager.install_npm("typescript")
+    packager.install_npm("typescript-language-server")
     vim.lsp.config("ts_ls", {
       cmd = { "typescript-language-server", "--stdio" },
       filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact" },
@@ -138,13 +136,11 @@ vim.api.nvim_create_autocmd("BufEnter", {
 })
 
 -- Vue.js support
--- Install Vue.js language server
-packager.install_npm("@vue/language-server")
--- Install Vue.js plugin for TypeScript language server
-packager.install_npm("@vue/typescript-plugin")
 vim.api.nvim_create_autocmd("BufEnter", {
   pattern = "*.vue",
   callback = function()
+    packager.install_npm("@vue/language-server")
+    packager.install_npm("@vue/typescript-plugin")
     local function get_root_dir()
       local path = vim.fn.expand("%:p")
       local markers = { "package.json", ".git" }
@@ -219,10 +215,10 @@ vim.api.nvim_create_autocmd("BufEnter", {
 })
 
 -- Markdown rendering support
-packager.install_package("render-markdown", "MeanderingProgrammer/render-markdown.nvim")
 vim.api.nvim_create_autocmd("BufEnter", {
   pattern = "*.md",
   callback = function()
+    packager.install_package("render-markdown", "MeanderingProgrammer/render-markdown.nvim")
     local render_markdown = packager.try_require("render-markdown")
     if not render_markdown then
       return
@@ -246,10 +242,10 @@ vim.api.nvim_create_autocmd("BufEnter", {
 })
 
 -- JSON support
-packager.install_npm("vscode-langservers-extracted")
 vim.api.nvim_create_autocmd("BufEnter", {
   pattern = { "*.json", "*.jsonc" },
   callback = function()
+    packager.install_npm("vscode-langservers-extracted")
     local capabilities = vim.lsp.protocol.make_client_capabilities()
     capabilities.textDocument.completion.completionItem.snippetSupport = true
     vim.lsp.config("jsonls", {
@@ -266,10 +262,10 @@ vim.api.nvim_create_autocmd("BufEnter", {
 })
 
 -- HTML support
-packager.install_npm("vscode-langservers-extracted")
 vim.api.nvim_create_autocmd("BufEnter", {
   pattern = "*.html",
   callback = function()
+    packager.install_npm("vscode-langservers-extracted")
     local capabilities = vim.lsp.protocol.make_client_capabilities()
     capabilities.textDocument.completion.completionItem.snippetSupport = true
     vim.lsp.config("html", {
@@ -305,10 +301,10 @@ vim.api.nvim_create_autocmd("BufEnter", {
 })
 
 -- CSS support
-packager.install_npm("vscode-langservers-extracted")
 vim.api.nvim_create_autocmd("BufEnter", {
   pattern = { "*.css", "*.scss", "*.less" },
   callback = function()
+    packager.install_npm("vscode-langservers-extracted")
     local capabilities = vim.lsp.protocol.make_client_capabilities()
     capabilities.textDocument.completion.completionItem.snippetSupport = true
     vim.lsp.config("cssls", {
@@ -343,10 +339,10 @@ vim.api.nvim_create_autocmd("BufEnter", {
 })
 
 -- SQL support
-packager.install_npm("sql-language-server")
 vim.api.nvim_create_autocmd("BufEnter", {
   pattern = "*.sql",
   callback = function()
+    packager.install_npm("sql-language-server")
     vim.lsp.config("sqlls", {
       cmd = { "sql-language-server", "up", "--method", "stdio" },
       filetypes = { "sql", "mysql" },
@@ -358,10 +354,10 @@ vim.api.nvim_create_autocmd("BufEnter", {
 })
 
 -- Yaml support
-packager.install_npm("yaml-language-server")
 vim.api.nvim_create_autocmd("BufEnter", {
   pattern = { "*.yaml", "*.yml" },
   callback = function()
+    packager.install_npm("yaml-language-server")
     vim.lsp.config("yamlls", {
       cmd = { "yaml-language-server", "--stdio" },
       filetypes = { "yaml" },
