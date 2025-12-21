@@ -33,6 +33,32 @@ vim.api.nvim_create_autocmd("BufEnter", {
     end
     lazydev.setup()
     vim.lsp.config("lua_ls", {
+      on_init = function(client)
+        if client.workspace_folders then
+          local path = client.workspace_folders[1].name
+          if
+            path ~= vim.fn.stdpath("config")
+            and (vim.uv.fs_stat(path .. "/.luarc.json") or vim.uv.fs_stat(path .. "/.luarc.jsonc"))
+          then
+            return
+          end
+        end
+        client.config.settings.Lua = vim.tbl_deep_extend("force", client.config.settings.Lua, {
+          runtime = {
+            version = "LuaJIT",
+            path = {
+              "lua/?.lua",
+              "lua/?/init.lua",
+            },
+          },
+          workspace = {
+            checkThirdParty = false,
+            library = {
+              vim.env.VIMRUNTIME,
+            },
+          },
+        })
+      end,
       cmd = { "lua-language-server" },
       root_markers = {
         ".luarc.json",
@@ -313,5 +339,20 @@ vim.api.nvim_create_autocmd("BufEnter", {
       },
     })
     vim.lsp.enable("cssls")
+  end,
+})
+
+-- SQL support
+packager.install_npm("sql-language-server")
+vim.api.nvim_create_autocmd("BufEnter", {
+  pattern = "*.sql",
+  callback = function()
+    vim.lsp.config("sqlls", {
+      cmd = { "sql-language-server", "up", "--method", "stdio" },
+      filetypes = { "sql", "mysql" },
+      root_markers = { ".sqllsrc.json" },
+      settings = {},
+    })
+    vim.lsp.enable("sqlls")
   end,
 })
