@@ -1,5 +1,7 @@
+-- Leader key workaround
+vim.keymap.set("n", "<leader>s", "<Nop>", { noremap = true, silent = true })
 -- Clear search highlighting with <Esc>
-vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
+vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>", { noremap = true })
 -- Toggle file manager
 vim.keymap.set("n", "<c-n>", ":NvimTreeToggle<cr>", { noremap = true })
 -- Fuzzy find for files

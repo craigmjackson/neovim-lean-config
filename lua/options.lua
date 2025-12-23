@@ -1,7 +1,4 @@
 --- Options
--- Set leader key
-vim.g.mapleader = " "
-vim.g.maplocalleader = " "
 -- Enable line numbers
 vim.opt.number = true
 -- Enable relative line numbers
@@ -41,3 +38,5 @@ vim.opt.winblend = 30
 -- the user has one.  Get one from https://www.nerdfonts.com/font-downloads
 -- and set your terminal emulator to use it.
 vim.g.nerd_font = true
+-- Set to true to enable automatic resolving of NPM packages
+vim.g.manage_npm = false
