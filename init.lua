@@ -4,6 +4,16 @@
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
+-- Nerd fonts are special programming fonts that provide icons.
+-- Set to false if you don't have a nerd font or can't guarantee
+-- the user has one.  Get one from https://www.nerdfonts.com/font-downloads
+-- and set your terminal emulator to use it.
+vim.g.nerd_font = true
+
+-- Set to true to enable automatic installation of NPM packages
+-- You must install node/npm somewhere inside your user directory and make sure <node_install_dir>/bin is in your PATH for this to work.
+vim.g.manage_npm = false
+
 -- Load keymaps
 require("keymaps")
 -- Load options

@@ -1,4 +1,6 @@
 --- Options
+-- Leader key workaround
+vim.keymap.set("n", "<leader>s", "<Nop>", { noremap = true, silent = true })
 -- Enable line numbers
 vim.opt.number = true
 -- Enable relative line numbers
@@ -7,7 +9,7 @@ vim.opt.relativenumber = true
 vim.opt.mouse = "nvi"
 -- Sync with the OS clipboard
 vim.schedule(function()
-  vim.opt.clipboard = "unnamedplus"
+	vim.opt.clipboard = "unnamedplus"
 end)
 -- Make undo files
 vim.opt.undofile = true
@@ -20,7 +22,7 @@ vim.opt.signcolumn = "yes"
 -- Write swapfile to disk if no activity for 250ms
 vim.opt.updatetime = 250
 -- How long for other sequences to timeout
-vim.opt.timeoutlen = 300
+vim.opt.timeoutlen = 1000
 -- Horizontal splits on the right
 vim.opt.splitright = true
 -- Vertical splits below
@@ -33,10 +35,3 @@ vim.opt.scrolloff = 5
 vim.opt.termguicolors = true
 -- Transparency for floating windows
 vim.opt.winblend = 30
--- Nerd fonts are special programming fonts that provide icons.
--- Set to false if you don't have a nerd font or can't guarantee
--- the user has one.  Get one from https://www.nerdfonts.com/font-downloads
--- and set your terminal emulator to use it.
-vim.g.nerd_font = true
--- Set to true to enable automatic resolving of NPM packages
-vim.g.manage_npm = false
