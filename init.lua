@@ -1,5 +1,31 @@
 -- Run :checkhealth to check for missing dependencies
 
+--  Dependencies will be used if they are found to be installed
+--    Binaries from your OS
+--      node (Many language servers)
+--      npm (Many language servers)
+--      python3 (Python support)
+--      stylua (Lua formatting)
+--      xclip (System clipboard integration)
+--      git (NeoVim plugin download/installtion)
+--      lua-language-server (Lua language server)
+--    Python packages
+--      black (Python formatting)
+--      pynvim (NeoVim support for Python)
+--    NPM packages
+--   	prettier (JavaScript/Typescript/Vue formatting)
+--   	neovim (NeoVim support for Node.js)
+--   	ripgrep (High-speed recursive grep)
+--   	pyright (Python support)
+--   	bash-language-server (Bash language server)
+--   	typescript (JavaScript/TypeScript language server dependency)
+--   	typescript-language-server (JavaScript/TypeScript language server)
+--   	@vue/language-server (Vue.js language server)
+--   	@vue/typescript-plugin (Vue.js TypeScript plugin)
+--   	vscode-langservers-extracted ()
+--   	sql-language-server (SQL language server)
+--   	yaml-language-server (YAML language server)
+
 -- Set leader key
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
