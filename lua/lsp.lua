@@ -4,6 +4,7 @@ local packager = require("packager")
 --- General LSP configuration
 vim.api.nvim_create_autocmd("LspAttach", {
 	callback = function(event)
+		local client = vim.lsp.get_client_by_id(event.data.client_id)
 		-- Goto definition
 		vim.keymap.set("n", "gd", vim.lsp.buf.implementation, { buffer = event.buf })
 		-- Enable virtual text
@@ -11,6 +12,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
 			virtual_text = {
 				source = false,
 			},
+			signs = true,
 			severity_sort = true,
 			float = { border = "rounded", source = "if_many" },
 			underline = { severity = vim.diagnostic.severity.ERROR },
@@ -18,6 +20,78 @@ vim.api.nvim_create_autocmd("LspAttach", {
 		-- Enable autocompletion while typing
 		vim.o.completeopt = "menu,menuone,noinsert,noselect"
 		vim.lsp.completion.enable(true, event.data.client_id, event.buf, { autotrigger = true })
+	end,
+})
+
+-- Rust support
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = "rust",
+	callback = function()
+		local bufnr = vim.api.nvim_get_current_buf()
+		local root = vim.fs.root(bufnr, { "Cargo.toml", ".git" }) or vim.fn.getcwd()
+		vim.lsp.start({
+			name = "rust-analyzer",
+			cmd = { "rust-analyzer" },
+			root_dir = root,
+			settings = {
+				["rust-analyzer"] = {
+					check = {
+						command = "clippy",
+					},
+					inlayHints = {
+						bindingModeHints = { enable = true },
+						chainingHints = { enable = true },
+						closingBraceHints = { enable = true },
+						closureReturnTypeHints = { enable = "always" },
+						lifetimeElisionHints = { enable = "always", useParameterNames = true },
+						parameterHints = { enable = true },
+						reborrowHints = { enable = "always" },
+						renderColons = true,
+						typeHints = { enable = true },
+					},
+				},
+			},
+			on_attach = function(client, bufnr)
+				local opts = { buffer = bufnr }
+				vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
+				vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
+				vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
+				vim.keymap.set("n", "<leader>ca", vim.lsp.buf.code_action, opts)
+
+				-- Inlay hints
+				if client:supports_method("textDocument/inlayHint") then
+					vim.lsp.inlay_hint.enable(false, { bufnr = bufnr }) -- reset
+					vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+					vim.api.nvim_create_autocmd({ "BufEnter", "InsertLeave" }, {
+						buffer = bufnr,
+						callback = function()
+							vim.lsp.inlay_hint.enable(true, { bufnr = bufnr })
+						end,
+					})
+				end
+				local function pull_diagnostics()
+					if client:supports_method("textDocument/diagnostic") then
+						client:request(
+							"textDocument/diagnostic",
+							{ textDocument = vim.lsp.util.make_text_document_params(bufnr) },
+							nil,
+							bufnr
+						)
+					end
+				end
+				vim.api.nvim_create_autocmd({ "BufWritePost", "TextChanged", "InsertLeave" }, {
+					buffer = bufnr,
+					callback = pull_diagnostics,
+				})
+				vim.api.nvim_create_autocmd("BufWritePre", {
+					buffer = bufnr,
+					callback = function()
+						vim.lsp.buf.format({ bufnr = bufnr })
+					end,
+				})
+				pull_diagnostics()
+			end,
+		})
 	end,
 })
 
